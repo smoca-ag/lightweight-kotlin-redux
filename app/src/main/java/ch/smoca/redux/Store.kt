@@ -8,6 +8,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 
+/*
+Store for redux like architecture
+ */
 class Store(initialState: State) {
 
     private var state: State = initialState
