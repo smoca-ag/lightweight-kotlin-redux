@@ -82,4 +82,5 @@ interface ActionListener {
 }
 
 interface State
+
 interface Action
