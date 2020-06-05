@@ -1,4 +1,4 @@
-package ch.smoca.redux.redux
+package ch.smoca.redux
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
