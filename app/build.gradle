@@ -14,4 +14,5 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_core"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines_android"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_extensions"
+    implementation "androidx.navigation:navigation-fragment:$navigation_fragment"
 }

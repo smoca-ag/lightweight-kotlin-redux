@@ -11,13 +11,13 @@ import kotlinx.coroutines.launch
 /*
 Store for redux like architecture
  */
-class Store(initialState: State) {
+class Store<T: State>(initialState: T) {
 
-    private var state: State = initialState
-    private val stateHolder: MutableLiveData<State>
+    private var state: T = initialState
+    private val stateHolder: MutableLiveData<T>
     private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
     private val sagas: MutableList<Saga> = mutableListOf()
-    private val reducers: MutableList<Reducer> = mutableListOf()
+    private val reducers: MutableList<Reducer<T>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     init {
@@ -25,7 +25,7 @@ class Store(initialState: State) {
     }
 
     // Will return a live data to observe state change
-    val stateObservable: LiveData<State>
+    val stateObservable: LiveData<T>
         get() = stateHolder
 
     // Will return a live data to observe the actions in the system.
@@ -67,7 +67,7 @@ class Store(initialState: State) {
         sagas.add(saga)
     }
 
-    operator fun plusAssign(reducer: Reducer) {
+    operator fun plusAssign(reducer: Reducer<T>) {
         reducers.add(reducer)
     }
 }
@@ -76,8 +76,8 @@ abstract class Saga(val dispatch: (action: Action) -> Unit) {
     abstract fun onAction(action: Action, state: State)
 }
 
-interface Reducer {
-    fun reduce(action: Action, state: State): State
+interface Reducer<T: State> {
+    fun reduce(action: Action, state: T): T
 }
 
 interface ActionListener {
