@@ -8,11 +8,15 @@ import ch.smoca.redux.ioc.IOCProvider
 abstract class ReduxFragment<S: State> : Fragment() {
 
     private lateinit var  store: Store<S>
+    private var currentState: S? = null
+    val state: S?
+    get() = currentState
 
     override fun onStart() {
         super.onStart()
         store = IOCProvider.iocOfContext(this).resolve()
         store.stateObservable.observe(this.viewLifecycleOwner::getLifecycle) {
+            currentState = it
             onStateChanged(it)
         }
     }
