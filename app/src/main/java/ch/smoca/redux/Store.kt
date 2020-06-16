@@ -16,7 +16,7 @@ class Store<T: State>(initialState: T) {
     private var state: T = initialState
     private val stateHolder: MutableLiveData<T>
     private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
-    private val sagas: MutableList<Saga> = mutableListOf()
+    private val sagas: MutableList<Saga<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
@@ -40,10 +40,10 @@ class Store<T: State>(initialState: T) {
     fun dispatch(action: Action) {
 
         CoroutineScope(singleThread).launch {
-            sagas.forEach { it.onAction(action, state) }
+
             val oldState = state
             state = reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
-
+            sagas.forEach { it.onAction(action, oldState, state) }
             if (state != oldState) {
                 // we will not post the state if it did not change.
                 // however, it is still possible that the UI receives the same state twice.
@@ -63,7 +63,7 @@ class Store<T: State>(initialState: T) {
         }
     }
 
-    operator fun plusAssign(saga: Saga) {
+    operator fun plusAssign(saga: Saga<T>) {
         sagas.add(saga)
     }
 
@@ -72,8 +72,8 @@ class Store<T: State>(initialState: T) {
     }
 }
 
-abstract class Saga(val dispatch: (action: Action) -> Unit) {
-    abstract fun onAction(action: Action, state: State)
+abstract class Saga<T: State>(val dispatch: (action: Action) -> Unit) {
+    abstract fun onAction(action: Action, oldState: T, newState: T)
 }
 
 interface Reducer<T: State> {
