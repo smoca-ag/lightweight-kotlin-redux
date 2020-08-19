@@ -8,12 +8,13 @@ import ch.smoca.redux.Action
 import ch.smoca.redux.State
 import ch.smoca.redux.Store
 import ch.smoca.redux.ioc.IOCProvider
+import java.lang.IllegalStateException
 
 abstract class ReduxFragment<S: State> : Fragment() {
 
     private lateinit var  store: Store<S>
-    val state: S?
-    get() = store.stateObservable.value
+    val state: S
+        get() = store.stateObservable.value ?: throw IllegalStateException("Store does not return state")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         store = IOCProvider.iocOfContext(this).resolve()

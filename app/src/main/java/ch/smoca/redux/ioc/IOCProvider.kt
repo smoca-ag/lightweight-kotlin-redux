@@ -6,7 +6,7 @@ import androidx.fragment.app.FragmentActivity
 import java.lang.IllegalStateException
 
 interface IOCProvider {
-    var ioc : IOC
+    val ioc : IOC
 
     companion object {
         fun iocOfContext(context: Context?) : IOC {
