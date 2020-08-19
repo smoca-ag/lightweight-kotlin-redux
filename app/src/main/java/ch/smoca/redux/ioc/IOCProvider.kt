@@ -20,7 +20,7 @@ interface IOCProvider {
                 return it.ioc
             }
 
-            throw IllegalStateException("NO IOCProvider presend")
+            throw IllegalStateException("NO IOCProvider present")
         }
 
         fun iocOfContext(fragment: Fragment): IOC {
