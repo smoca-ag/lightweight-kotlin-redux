@@ -11,18 +11,14 @@ import kotlinx.coroutines.launch
 /*
 Store for redux like architecture
  */
-class Store<T: State>(initialState: T) {
+class Store<T : State>(initialState: T) {
 
     private var state: T = initialState
-    private val stateHolder: MutableLiveData<T>
+    private val stateHolder: MutableLiveData<T> = MutableLiveData(state)
     private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-
-    init {
-        stateHolder = MutableLiveData(state)
-    }
 
     // Will return a live data to observe state change
     val stateObservable: LiveData<T>
@@ -43,7 +39,9 @@ class Store<T: State>(initialState: T) {
 
             val oldState = state
             state = reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
-            sagas.forEach { it.onAction(action, oldState, state) }
+            for (saga in sagas) {
+                saga.onAction(action, oldState, state)
+            }
             if (state != oldState) {
                 // we will not post the state if it did not change.
                 // however, it is still possible that the UI receives the same state twice.
@@ -59,7 +57,7 @@ class Store<T: State>(initialState: T) {
     // UI Action Listener will always be notified on the main thread. For every action
     private fun alertListenerOnMainThread(action: Action) {
         CoroutineScope(Dispatchers.Main).launch {
-            mainThreadActionListeners.forEach { it.onAction(action) }
+            for (listener in mainThreadActionListeners) listener.onAction(action)
         }
     }
 
@@ -72,11 +70,11 @@ class Store<T: State>(initialState: T) {
     }
 }
 
-abstract class Saga<T: State>(val dispatch: (action: Action) -> Unit) {
+abstract class Saga<T : State>(val dispatch: (action: Action) -> Unit) {
     abstract fun onAction(action: Action, oldState: T, newState: T)
 }
 
-interface Reducer<T: State> {
+interface Reducer<T : State> {
     fun reduce(action: Action, state: T): T
 }
 
