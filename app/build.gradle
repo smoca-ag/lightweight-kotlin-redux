@@ -4,9 +4,9 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 16
     }
 }
 
@@ -17,5 +17,5 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_core"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines_android"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_extensions"
-    implementation "androidx.navigation:navigation-fragment:$navigation_fragment"
+    implementation "androidx.navigation:navigation-fragment-ktx:$navigation_fragment"
 }
