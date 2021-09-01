@@ -1,11 +1,10 @@
 package ch.smoca.redux
-
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /*
@@ -14,14 +13,13 @@ Store for redux like architecture
 class Store<T : State>(initialState: T) {
 
     private var state: T = initialState
-    private val stateHolder: MutableLiveData<T> = MutableLiveData(state)
     private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-
+    private val stateHolder = MutableStateFlow<T>(state)
     // Will return a live data to observe state change
-    val stateObservable: LiveData<T>
+    val stateObservable: StateFlow<T>
         get() = stateHolder
 
     // Will return a live data to observe the actions in the system.
@@ -47,7 +45,7 @@ class Store<T : State>(initialState: T) {
                 // however, it is still possible that the UI receives the same state twice.
                 // if something changes value fast to something and back, the UI thread may
                 // receive the first state and the last state.
-                stateHolder.postValue(state)
+                stateHolder.value = state
             }
 
             alertListenerOnMainThread(action)
