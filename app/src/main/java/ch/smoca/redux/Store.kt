@@ -1,4 +1,5 @@
 package ch.smoca.redux
+import android.util.Log
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +48,6 @@ class Store<T : State>(initialState: T) {
                 // receive the first state and the last state.
                 stateHolder.value = state
             }
-
             alertListenerOnMainThread(action)
         }
     }
