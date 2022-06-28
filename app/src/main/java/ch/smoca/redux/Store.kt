@@ -61,7 +61,6 @@ class Store<T : State>(initialState: T) {
                 // receive the first state and the last state.
                 stateHolder.value = state
             }
-
             alertListenerOnMainThread(action)
         }
     }
