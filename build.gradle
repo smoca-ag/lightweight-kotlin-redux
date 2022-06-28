@@ -1,20 +1,17 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-
     ext {
-        kotlin_version = '1.5.21'
-        core_ktx = '1.6.0'
-        kotlinx_coroutines_core ='1.5.1'
-        kotlinx_coroutines_android ='1.5.1'
-        lifecycle_extensions = '2.2.0'
-        navigation_fragment = '2.3.5'
+        kotlin_version = '1.5.31'
+        core_ktx = '1.7.0'
+        kotlinx_coroutines_core = '1.5.1'
+        kotlinx_coroutines_android = '1.5.1'
     }
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.0.2"
+        classpath 'com.android.tools.build:gradle:4.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -25,7 +22,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 

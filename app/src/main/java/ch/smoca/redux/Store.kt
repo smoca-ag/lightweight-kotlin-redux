@@ -1,5 +1,5 @@
 package ch.smoca.redux
-import android.util.Log
+
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -8,32 +8,45 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-/*
-Store for redux like architecture
+/**
+ * Store for redux like architecture
+ * @param T the type of your initial state
+ * @param initialState the initial state
  */
 class Store<T : State>(initialState: T) {
-
     private var state: T = initialState
     private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val stateHolder = MutableStateFlow<T>(state)
-    // Will return a live data to observe state change
+
+    /**
+     * @return StateFlow<T> to observe state change where T is the type of the state
+     */
     val stateObservable: StateFlow<T>
         get() = stateHolder
 
-    // Will return a live data to observe the actions in the system.
+    /**
+     * Register an action listener
+     */
     fun addMainThreadActionListener(listener: ActionListener) {
         mainThreadActionListeners.add(listener)
     }
 
+    /**
+     * Remove an action listener
+     */
     fun removeMainThreadActionListener(listener: ActionListener) {
         mainThreadActionListeners.remove(listener)
     }
 
+    /**
+     * Dispatches an action to the main thread, no matter from which thread it is called.
+     * All action listeners are alerted.
+     * @param action an action to be dispatched
+     */
     fun dispatch(action: Action) {
-
         CoroutineScope(singleThread).launch {
 
             val oldState = state
@@ -67,19 +80,3 @@ class Store<T : State>(initialState: T) {
         reducers.add(reducer)
     }
 }
-
-abstract class Saga<T : State>(val dispatch: (action: Action) -> Unit) {
-    abstract fun onAction(action: Action, oldState: T, newState: T)
-}
-
-interface Reducer<T : State> {
-    fun reduce(action: Action, state: T): T
-}
-
-interface ActionListener {
-    fun onAction(action: Action)
-}
-
-interface State
-
-interface Action
