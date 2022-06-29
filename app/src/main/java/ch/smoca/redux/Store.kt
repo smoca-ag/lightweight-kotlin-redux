@@ -72,11 +72,24 @@ class Store<T : State>(initialState: T) {
         }
     }
 
+    @Deprecated("use plus operator instead")
     operator fun plusAssign(saga: Saga<T>) {
         sagas.add(saga)
     }
 
+    @Deprecated("use plus operator instead")
     operator fun plusAssign(reducer: Reducer<T>) {
         reducers.add(reducer)
     }
+
+    operator fun plus(reducer: Reducer<T>) : Store<T> {
+        reducers.add(reducer)
+        return this
+    }
+
+    operator fun plus(saga: Saga<T>) : Store<T> {
+        sagas.add(saga)
+        return this
+    }
+
 }
