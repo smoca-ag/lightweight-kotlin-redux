@@ -1,6 +1,8 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+}
 
 android {
     compileSdkVersion 31
@@ -13,7 +15,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "androidx.core:core-ktx:$core_ktx"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_core"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines_android"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines"
 }
