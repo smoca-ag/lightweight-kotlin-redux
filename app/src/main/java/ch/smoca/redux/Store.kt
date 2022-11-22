@@ -13,11 +13,11 @@ import kotlinx.coroutines.launch
  * @param T the type of your initial state
  * @param initialState the initial state
  */
-class Store<T : State>(initialState: T) {
+class Store<T : State, AD: Any>(initialState: T) {
     private var state: T = initialState
-    private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
-    private val sagas: MutableList<Saga<T>> = mutableListOf()
-    private val reducers: MutableList<Reducer<T>> = mutableListOf()
+    private val mainThreadActionListeners: MutableList<ActionListener<AD>> = mutableListOf()
+    private val sagas: MutableList<Saga<T, AD, AD>> = mutableListOf()
+    private val reducers: MutableList<Reducer<T, AD>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val stateHolder = MutableStateFlow<T>(state)
 
@@ -30,14 +30,14 @@ class Store<T : State>(initialState: T) {
     /**
      * Register an action listener
      */
-    fun addMainThreadActionListener(listener: ActionListener) {
+    fun addMainThreadActionListener(listener: ActionListener<AD>) {
         mainThreadActionListeners.add(listener)
     }
 
     /**
      * Remove an action listener
      */
-    fun removeMainThreadActionListener(listener: ActionListener) {
+    fun removeMainThreadActionListener(listener: ActionListener<AD>) {
         mainThreadActionListeners.remove(listener)
     }
 
@@ -46,7 +46,7 @@ class Store<T : State>(initialState: T) {
      * All action listeners are alerted.
      * @param action an action to be dispatched
      */
-    fun dispatch(action: Action) {
+    fun dispatch(action: AD) {
         CoroutineScope(singleThread).launch {
 
             val oldState = state
@@ -66,28 +66,28 @@ class Store<T : State>(initialState: T) {
     }
 
     // UI Action Listener will always be notified on the main thread. For every action
-    private fun alertListenerOnMainThread(action: Action) {
+    private fun alertListenerOnMainThread(action: AD) {
         CoroutineScope(Dispatchers.Main).launch {
             for (listener in mainThreadActionListeners) listener.onAction(action)
         }
     }
 
     @Deprecated("use plus operator instead")
-    operator fun plusAssign(saga: Saga<T>) {
+    operator fun plusAssign(saga: Saga<T, AD, AD>) {
         sagas.add(saga)
     }
 
     @Deprecated("use plus operator instead")
-    operator fun plusAssign(reducer: Reducer<T>) {
+    operator fun plusAssign(reducer: Reducer<T, AD>) {
         reducers.add(reducer)
     }
 
-    operator fun plus(reducer: Reducer<T>) : Store<T> {
+    operator fun plus(reducer: Reducer<T, AD>) : Store<T, AD> {
         reducers.add(reducer)
         return this
     }
 
-    operator fun plus(saga: Saga<T>) : Store<T> {
+    operator fun plus(saga: Saga<T, AD, AD>) : Store<T, AD> {
         sagas.add(saga)
         return this
     }
