@@ -1,5 +1,5 @@
 package ch.smoca.redux
 
-interface Reducer<T : State> {
-    fun reduce(action: Action, state: T): T
+interface Reducer<T : State, A: Any> {
+    fun reduce(action: A, state: T): T
 }
