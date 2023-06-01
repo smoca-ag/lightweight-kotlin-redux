@@ -8,9 +8,8 @@ android {
     compileSdkVersion 31
     defaultConfig {
         minSdkVersion 16
-        versionCode 4
-        versionName "2.0.0"
     }
+    namespace 'ch.smoca.redux'
 }
 
 dependencies {
