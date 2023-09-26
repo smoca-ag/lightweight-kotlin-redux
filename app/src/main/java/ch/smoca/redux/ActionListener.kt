@@ -1,5 +1,5 @@
 package ch.smoca.redux
 
-interface ActionListener<A: Any> {
-    fun onAction(action: A)
+interface ActionListener {
+    fun onAction(action: Action)
 }
