@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.0 (TAG)
+- Removed Action Generics. Actions should be placed as seald class in Reducer/Saga
+- Changed Store class to abstract class. Reason: In Jetpack Compose, store should be makred with @Stable or unnecessary recompose will happen because the store will be makred as unstable.
+
 ## 3.0.1 (TAG)
 - Fixed generic bugs
 
