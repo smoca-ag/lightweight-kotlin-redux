@@ -10,11 +10,11 @@ import kotlinx.coroutines.launch
 
 /**
  * Store for redux like architecture
+ * If used with jetpack compose, make sure to mark the store as @Stable
  * @param T the type of your initial state
  * @param initialState the initial state
  */
-
-class Store<T : State>(initialState: T) {
+abstract class Store<T : State>(initialState: T) {
     private var state: T = initialState
     private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
