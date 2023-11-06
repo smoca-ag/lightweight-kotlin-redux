@@ -5,11 +5,10 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdk sdkVersion
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion minSdkVersion
     }
-    namespace 'ch.smoca.redux'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -22,6 +21,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:kotlin_coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines"
 }

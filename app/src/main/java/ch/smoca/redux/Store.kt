@@ -10,14 +10,15 @@ import kotlinx.coroutines.launch
 
 /**
  * Store for redux like architecture
+ * If used with jetpack compose, make sure to mark the store as @Stable
  * @param T the type of your initial state
  * @param initialState the initial state
  */
-class Store<T : State, ACTION: Any>(initialState: T) {
+abstract class Store<T : State>(initialState: T) {
     private var state: T = initialState
-    private val mainThreadActionListeners: MutableList<ActionListener<ACTION>> = mutableListOf()
-    private val sagas: MutableList<Saga<T, ACTION>> = mutableListOf()
-    private val reducers: MutableList<Reducer<T, ACTION>> = mutableListOf()
+    private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
+    private val sagas: MutableList<Saga<T>> = mutableListOf()
+    private val reducers: MutableList<Reducer<T>> = mutableListOf()
     private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val stateHolder = MutableStateFlow<T>(state)
 
@@ -30,14 +31,14 @@ class Store<T : State, ACTION: Any>(initialState: T) {
     /**
      * Register an action listener
      */
-    fun addMainThreadActionListener(listener: ActionListener<ACTION>) {
+    fun addMainThreadActionListener(listener: ActionListener) {
         mainThreadActionListeners.add(listener)
     }
 
     /**
      * Remove an action listener
      */
-    fun removeMainThreadActionListener(listener: ActionListener<ACTION>) {
+    fun removeMainThreadActionListener(listener: ActionListener) {
         mainThreadActionListeners.remove(listener)
     }
 
@@ -46,7 +47,7 @@ class Store<T : State, ACTION: Any>(initialState: T) {
      * All action listeners are alerted.
      * @param action an action to be dispatched
      */
-    fun dispatch(action: ACTION) {
+    fun dispatch(action: Action) {
         CoroutineScope(singleThread).launch {
 
             val oldState = state
@@ -66,30 +67,31 @@ class Store<T : State, ACTION: Any>(initialState: T) {
     }
 
     // UI Action Listener will always be notified on the main thread. For every action
-    private fun alertListenerOnMainThread(action: ACTION) {
+    private fun alertListenerOnMainThread(action: Action) {
         CoroutineScope(Dispatchers.Main).launch {
             for (listener in mainThreadActionListeners) listener.onAction(action)
         }
     }
 
     @Deprecated("use plus operator instead")
-    operator fun plusAssign(saga: Saga<T, ACTION>) {
+    operator fun plusAssign(saga: Saga<T>) {
         sagas.add(saga)
     }
 
     @Deprecated("use plus operator instead")
-    operator fun plusAssign(reducer: Reducer<T, ACTION>) {
+    operator fun plusAssign(reducer: Reducer<T>) {
         reducers.add(reducer)
     }
 
-    operator fun plus(reducer: Reducer<T, ACTION>) : Store<T, ACTION> {
+    operator fun plus(reducer: Reducer<T>) : Store<T> {
         reducers.add(reducer)
         return this
     }
 
-    operator fun plus(saga: Saga<T, ACTION>) : Store<T, ACTION> {
+    operator fun plus(saga: Saga<T>) : Store<T> {
         sagas.add(saga)
         return this
     }
 
 }
+interface Action
