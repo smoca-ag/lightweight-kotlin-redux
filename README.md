@@ -1,5 +1,8 @@
 # Changelog
 
+## 5.0.0 (TAG)
+- Using gradle's extra variables (project.ext.minSDK, project.ext.maxSDK) for defining SDK versions
+
 ## 4.0.0 (TAG)
 - Removed Action Generics. Actions should be placed as seald class in Reducer/Saga
 - Changed Store class to abstract class. Reason: In Jetpack Compose, store should be makred with @Stable or unnecessary recompose will happen because the store will be makred as unstable.
