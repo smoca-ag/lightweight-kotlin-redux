@@ -5,9 +5,10 @@ plugins {
 }
 
 android {
-    compileSdk sdkVersion
+    compileSdk project.ext.maxSdk
     defaultConfig {
-        minSdkVersion minSdkVersion
+        minSdkVersion project.ext.minSdk
+        targetSdk project.ext.maxSdk
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
