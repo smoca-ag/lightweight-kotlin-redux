@@ -1,15 +1,10 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
+    alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 android {
     compileSdk project.ext.maxSdk
-    defaultConfig {
-        minSdkVersion project.ext.minSdk
-        targetSdk project.ext.maxSdk
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -22,5 +17,5 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation(libs.androidx.coroutines)
+    implementation libs.kotlinx.coroutines
 }
