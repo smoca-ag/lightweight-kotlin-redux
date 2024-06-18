@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -7,25 +8,19 @@ plugins {
 
 kotlin {
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
-
-    val xcFrameworkName = "Redux"
-    val xcf = XCFramework(xcFrameworkName)
-
+    
     listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = xcFrameworkName
-            binaryOption("bundleId", "ch.smoca.${xcFrameworkName}")
-            xcf.add(this)
+            baseName = "redux-store"
             isStatic = true
         }
     }
