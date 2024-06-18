@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
@@ -11,27 +9,6 @@ kotlin {
             kotlinOptions {
                 jvmTarget = "1.8"
             }
-        }
-    }
-
-    jvm()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
-    val xcFrameworkName = "ReduxStore"
-    val xcf = XCFramework(xcFrameworkName)
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = xcFrameworkName
-            binaryOption("bundleId", "ch.smoca.${xcFrameworkName}")
-            xcf.add(this)
-            isStatic = true
         }
     }
 
