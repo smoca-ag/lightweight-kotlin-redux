@@ -1,0 +1,25 @@
+stages:
+  - lint
+  - build
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  ARTIFACTS_ANDROID: "./app/build"
+
+.base_job:
+  before_script:
+    - set -euxo pipefail
+    - brew install openjdk@17
+    - export JAVA_HOME=$(brew --prefix openjdk@17)
+
+lint/kotlin:
+  extends: .base_job
+  stage: lint
+  script:
+    - ./gradlew lint
+
+build/kotlin:
+  extends: .base_job
+  stage: build
+  script:
+    - ./gradlew :shared:assemble
