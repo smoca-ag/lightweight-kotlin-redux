@@ -11,6 +11,10 @@ variables:
     - set -euxo pipefail
     - brew install openjdk@17
     - export JAVA_HOME=$(brew --prefix openjdk@17)
+  tags:
+    - android_sdk_30
+
+
 
 lint/kotlin:
   extends: .base_job
