@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "redux"
-include(":shared")
+include(":libredux")
