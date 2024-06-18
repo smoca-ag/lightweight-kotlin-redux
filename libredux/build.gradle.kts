@@ -14,7 +14,7 @@ kotlin {
         }
     }
 
-    val xcFrameworkName = "ReduxStore"
+    val xcFrameworkName = "Redux"
     val xcf = XCFramework(xcFrameworkName)
 
     listOf(
