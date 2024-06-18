@@ -26,4 +26,4 @@ build/kotlin:
   extends: .base_job
   stage: build
   script:
-    - ./gradlew :libredux:assemble
+    - ./gradlew :redux-store:assemble
