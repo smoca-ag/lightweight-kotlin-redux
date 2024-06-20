@@ -14,16 +14,16 @@ variables:
   tags:
     - android_sdk_30
 
-
-
-lint/kotlin:
+lint/kmp:
   extends: .base_job
   stage: lint
   script:
+    - cd kmp
     - ./gradlew lint
 
-build/kotlin:
+build/kmp:
   extends: .base_job
   stage: build
   script:
-    - ./gradlew :redux-store:assemble
+    - cd kmp
+    - ./gradlew :redux:assemble
