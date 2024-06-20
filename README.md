@@ -2,7 +2,7 @@
 
 This is a [Kotlin Multiplatform (kmp)](https://kotlinlang.org/docs/multiplatform.html) and raw Kotlin library implementation inspired by [Redux](https://redux.js.org/tutorials/fundamentals/part-1-overview#introduction)
 
-This library has received some major changes over the years. For versions 3.0.0 and above visit the  [release page](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/releases). For older versions see the wiki page[Changelog](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/wikis/Changelog). Unfortunately, the versioning is very confusing as it was not done properly in the past.
+This library has received some major changes over the years. For versions 3.0.0 and above visit the  [release page](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/releases). For older versions see the wiki page [Changelog](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/wikis/Changelog). Unfortunately, the versioning is very confusing as it was not done properly in the past.
 
 Until version 5.0.0 this library was Android only. 
 
