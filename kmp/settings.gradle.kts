@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "redux"
-include(":redux-store")
+rootProject.name = "reduxkmp"
+include(":redux")

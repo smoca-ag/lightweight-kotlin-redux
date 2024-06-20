@@ -13,21 +13,26 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "redux-store"
+            baseName = "redux"
             isStatic = true
         }
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(libs.kotlin.coroutines.core)
+        commonMain {
+            kotlin {
+                srcDirs("../../src")
+            }
+            dependencies {
+                implementation(libs.kotlin.coroutines.core)
+            }
         }
     }
 }

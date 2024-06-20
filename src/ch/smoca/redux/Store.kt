@@ -1,13 +1,12 @@
 package ch.smoca.redux
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newSingleThreadContext
 
 /**
  * Store for redux like architecture
@@ -20,16 +19,23 @@ abstract class Store<T : State>(initialState: T) {
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
-    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-    private val singleThread = newSingleThreadContext("redux-dispatcher")
+    private val singleThread = Dispatchers.IO.limitedParallelism(1)
     private val stateHolder = MutableStateFlow(state)
 
     fun addReducer(reducer: Reducer<T>) {
         reducers.add(reducer)
     }
 
+    fun addReducers(reducers: List<Reducer<T>>) {
+        reducers.forEach { addReducer(it) }
+    }
+
     fun addSaga(saga: Saga<T>) {
         sagas.add(saga)
+    }
+
+    fun addSagas(sagas: List<Saga<T>>) {
+        sagas.forEach { addSaga(it) }
     }
 
     /**
@@ -57,7 +63,6 @@ abstract class Store<T : State>(initialState: T) {
      * All action listeners are alerted.
      * @param action an action to be dispatched
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun dispatch(action: Action) {
         CoroutineScope(singleThread).launch {
 
