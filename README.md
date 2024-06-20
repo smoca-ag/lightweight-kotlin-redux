@@ -1,65 +1,21 @@
-# Changelog
+# Redux Store
 
-## 5.0.0 (TAG)
-- Using gradle's extra variables (project.ext.minSDK, project.ext.maxSDK) for defining SDK versions
+This is a [Kotlin Multiplatform (kmp)](https://kotlinlang.org/docs/multiplatform.html) and raw Kotlin library implementation inspired by [Redux](https://redux.js.org/tutorials/fundamentals/part-1-overview#introduction)
 
-## 4.0.0 (TAG)
-- Removed Action Generics. Actions should be placed as seald class in Reducer/Saga
-- Changed Store class to abstract class. Reason: In Jetpack Compose, store should be makred with @Stable or unnecessary recompose will happen because the store will be makred as unstable.
+This library has received some major changes over the years. For versions 3.0.0 and above visit the  [release page](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/releases). For older versions see the wiki page[Changelog](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/wikis/Changelog). Unfortunately, the versioning is very confusing as it was not done properly in the past.
 
-## 3.0.1 (TAG)
-- Fixed generic bugs
+Until version 5.0.0 this library was Android only. 
 
-## 3.0.0 (TAG WITH MAJOR CHANGES)
-- Added use of generic `Actions` for Sagas and Reducers
-- Removed `Action` interface
-    * Actions should now be implemented as sealed classes
+## How To Use
+How to use version 6.0.0 to implement a multiplatform State or as an Android only State visit the wiki page [How to use](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/redux-store/-/wikis/How-To-Use)
 
-## 2.0.2 (TAG)
-### Same as 2.0.1
+For older versions there is no documentation as these versions are deprecated and shall not be used. Please visit existing projects which used specific versions of this library. Here a list:
 
-## 2.0.1 (TAG)
-### Added the features of 1.0.5
-
-## 2.0.0 (Branch)
-### Head of 1.0.3 with the Following changes applied:
-- Switched to plugins syntax
-
-## 1.0.5 (TAG)
-- Deprecated `plusAssign` of Sagas and Reducers to the Store and replaced them with `plus`
-    * Sagas and Reducers are now added like this:
-```kotlin
-val store = Store(State())
-store +
-    Saga() +
-    Reducer()
-```
-
-## 1.0.4 (TAG)
-- Removed `kotlin-stdlib` gradle dependency
-
-## 1.0.3 (BRANCH WITH MAJOR CHANGES)
-- Removed `ReduxFragment`
-- Removed `UI` (implement the fragment per project as it is not the job of a library)
-- Removed `IOC` (we moved this to [another library](https://gitlab.smoca.ch/smoca/libraries/android-toolbox/ioc))
-- Cleaned up code
-- Added Javadocs
-
-## (1.0.2.1) (COMMIT 2feef35e0abdb5c6a63e3df5c85d19daa99cad1a WITH MAJOR CHANGES)
-### Between 1.0.2 and 1.0.3 ReduxFragment was added and removed. Some projects depend on this commit so you never have to search it ever again :)
-- Added `ReduxFragment` () -> use this head if your project has redux.ui dependencies
-- Added use of a generic `State` for the Store
-- Replaced `LiveData` with `StateFlows`
-- Added oldState, newState to `Saga::onAction`
-- Added minSDK 16
-- Cleaned up code
-- Fixed a typo in Error message `presend` -> `present`
-
-## 1.0.2 (TAG)
-- Added comments to source code
-
-## 1.0.1 (TAG)
-- Formatted Android project
-
-## 1.0.0 (TAG)
-- Initial Version containing the a Store, Saga, Reducer, State and Action
+* 5.0.0
+  - [Sander](https://gitlab.smoca.ch/smoca/sanders-elektronik/emergency-lighting-android)
+* 3.0.1
+  - [Revoltab](https://gitlab.smoca.ch/smoca/revoltab/-/tree/main/android?ref_type=heads)
+* 1.0.3
+  - [Caruso](https://gitlab.smoca.ch/smoca/caruso-android)
+* 1.0.2
+  - [Bertschi](https://gitlab.smoca.ch/smoca/bertschi-app/-/tree/master/android?ref_type=heads)
