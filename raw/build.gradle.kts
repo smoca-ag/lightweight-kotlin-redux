@@ -1,13 +1,17 @@
+/*
+ this can not build on its own, only when imported as module in an android project
+ the android project must implement coroutines core:
+
+ [libs.versions.toml]
+ kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+ */
+
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm")
 }
 
 group = "ch.smoca"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
 
 sourceSets {
     main {
@@ -18,9 +22,5 @@ sourceSets {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
-}
-
-kotlin {
-    jvmToolchain(17)
+    implementation(libs.kotlin.coroutines.core)
 }
