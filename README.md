@@ -2,42 +2,33 @@
 
 This library can be used for two scenarios which differ in creation:
 
-- [Project Creation](#project-creation)
-   * [Multiplatform](#multiplatform)
-     + [KMP State Definition](#kmp-state-definition)
-     + [Native Implementation](#native-implementation)
-       - [iOS](#ios)
-       - [Android](#android) 
-   * [Android Only](#android-only)
+- [Project Setup](#project-setup)
+  + [KMP State Definition](#kmp-state-definition)
+  + [Native Implementation](#native-implementation)
+    - [iOS](#ios)
+    - [Android](#android) 
 - [Create Redux Components](#create-redux-components)
 
-# Project Creation
+# Project Setup
 
-## Multiplatform
-Use this if you want to create a State definition with all its reducers and sagas for an iOS and Android project. This has the advantage that the State will be identical on both platforms.
-
-### KMP State Definition
+## KMP State Definition
 1. Create a repository in GitLab. This repository will be used for the State definition (KMP), Android Native, and iOS Native.
 
 2. Create three folders: `mkdir android ios multiplatform`
 
-3. Add this library as a git submodule to the folder `multiplatform`:
-```bash
-git submodule add "../libraries/android-toolbox/redux-store" multiplatform/redux-store
-```
+3. In Android Studio add the multiplatform IDE Plugin `Android Studio > Settings > Plugins > Marketplace > Kotlin Multiplatform`
 
-4. In Android Studio add the multiplatform IDE Plugin `Android Studio > Settings > Plugins > Marketplace > Kotlin Multiplatform`
+4. Create a new Kotlin Multiplatform Library Project called `{ProjectName}State` and use the folder `multiplatform`
 
-5. Create a new Kotlin Multiplatform Library Project called `{ProjectName}State` and use the folder `multiplatform`
-
-6. Open `gradle/libs.versions.toml` and add these dependencies (versions might be updated):
+5. Open `gradle/libs.versions.toml` and add these dependencies (versions might be updated):
 ```diff
 [versions]
 agp = "8.5.0"
 kotlin = "2.0.0"
 +coroutines = "1.9.0-RC"
-+ktor = "2.3.11" # for networking only, can be skipped unless needed
 +serialization = "2.0.0"
++redux = "6.0.0"
++ktor = "2.3.11" # only needed for the network example
 
 [libraries]
 +kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -47,6 +38,7 @@ kotlin = "2.0.0"
 +ktor-client-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 +ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 +ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
++smoca-redux = { module = "ch.smoca.lib:lightweight-kotlin-redux", version.ref = "redux" }
 
 [plugins]
 +serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serialization" }
@@ -54,7 +46,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 ```
 
-7. Open `shared/build.gradle.kts` and apply serialization plugin:
+6. Open `shared/build.gradle.kts` and apply serialization plugin:
 ```diff
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -63,7 +55,7 @@ plugins {
 }
 ```
 
-8. In the same file configure the iOS Framework building:
+7. In the same file configure the iOS Framework building:
 ```diff
 kotlin {
     androidTarget {
@@ -90,13 +82,13 @@ kotlin {
 }
 ```
 
-9. Last to do in this file is adding the defined dependencies:
+8. Last to do in this file is adding the defined dependencies:
 ```diff
 kotlin {
     sourceSets {
         commonMain.dependencies {
 -            //put your multiplatform dependencies here
-+            implementation(project(":redux"))
++            implementation(libs.smoca.redux)
 +            implementation(libs.kotlin.coroutines.core)
 +            implementation(libs.ktor.client.core)
 +            implementation(libs.ktor.client.serialization.core)
@@ -116,20 +108,12 @@ kotlin {
 }
 ```
 
-10. Open `settings.gradle.kts` and add the redux library:
-```diff
-rootProject.name = "demo"
-include(":shared")
-+include(":redux")
-+project(":redux").projectDir = File("redux-store/kmp/redux")
-```
+9. The Project should now sync and build successfully. Continue by [creating the Redux components](#create-redux-components)
 
-11. The Project should now sync and build successfully. @4nd2in and @mannholi can help with Problems. Continue by [creating the Redux components](#create-redux-components)
-
-### Native Implementation
+## Native Implementation
 After finishing your Redux components this project must now be imported to our native environment.
 
-#### iOS
+### iOS
 In gradle we defined the iOS output to be an xcFramework. This can be built with the following gradle command:
 ```bash
 # ./gradlew :{sharedModuleName}:assemble{xcFrameworkName}XCFramework
@@ -179,7 +163,7 @@ class SwiftStateListener: Redux_storeStateListener {
 }
 ```
 
-#### Android
+### Android
 For Android there is no need to build a binary because the library runs on Kotlin. Here we need to import the source code of the multiplatform as module. This is a bit more tricky, because we need to pay attention to include all dependencies.
 
 1. Open `settings.gradle.kts` and add these modules:
@@ -282,63 +266,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 ```
-
-
-## Android Only
-Use this if iOS and Android will have different state implementation or only an Android app is needed. This variant can also be used to update old Android Projects to the newest Redux library version.
-
-1. Create a repository in GitLab. This repository will be used for Android only.
-
-2. Add this library as git submodule:
-```bash
-git submodule add "../libraries/android-toolbox/redux-store"
-```
-
-3. In Android Studio create an Android Project
-
-4. Open `gradle/libs.versions.toml` and add these dependencies (versions might be updated):
-```diff
-[versions]
-[versions]
-agp = "8.5.0"
-kotlin = "2.0.0"
-coreKtx = "1.13.1"
-espressoCore = "3.5.1"
-appcompat = "1.7.0"
-material = "1.12.0"
-+coroutines = "1.9.0-RC"
-
-[libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-+kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-
-[plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-```
-
-5. Open `settings.gradle.kts` and add the redux library:
-```diff
-rootProject.name = "Demo"
-include(":app")
-+include(":redux")
-+project(":redux").projectDir = File("../redux-store/raw")
-```
-
-6. Open `app/build.gradle.kts` and add the defined dependencies:
-```diff
-dependencies {
-+    implementation(project(":redux"))
-+    implementation(libs.kotlin.coroutines.core)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-}
-```
-
-7. The Project should now sync and build successfully. @4nd2in and @mannholi can help with Problems. Continue by [creating the Redux components](#create-redux-components)
 
 # Create Redux Components
 Here a short description of all components and what they do:

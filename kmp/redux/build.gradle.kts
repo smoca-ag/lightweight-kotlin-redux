@@ -56,7 +56,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             group = "ch.smoca.lib"
             artifactId = "lightweight-kotlin-redux"
-            version = "6.0"
+            version = "6.0.0"
             pom {
                 name = "Lightweight Kotlin Redux"
                 description = "A lightweight, kotlin multiplatform implementation of redux"
