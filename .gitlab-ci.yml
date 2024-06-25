@@ -34,9 +34,6 @@ publish/library:
   stage: publish
   script:
     - cd kmp
-    - ORG_GRADLE_PROJECT_key=$(base64 -Ddi $SIGNING_SECRING)
-    - ORG_GRADLE_PROJECT_keyId=$SIGNING_KEY_ID
-    - ORG_GRADLE_PROJECT_pw=$SIGNING_PW
     - ./gradlew publish
   when: manual
 
