@@ -31,7 +31,7 @@ build/kmp:
 
 publish/library:
   extends: .base_job
-  state: publish
+  stage: publish
   script:
     - cd kmp
     - ORG_GRADLE_PROJECT_key = base64 -Ddi $SIGNING_SECRING
