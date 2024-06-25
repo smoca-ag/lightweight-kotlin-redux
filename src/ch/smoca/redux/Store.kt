@@ -1,9 +1,8 @@
 package ch.smoca.redux
 
-import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,11 +15,27 @@ import kotlinx.coroutines.launch
  */
 abstract class Store<T : State>(initialState: T) {
     private var state: T = initialState
-    private val mainThreadActionListeners: MutableList<ActionListener> = mutableListOf()
+    private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
-    private val singleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private val stateHolder = MutableStateFlow<T>(state)
+    private val singleThread = Dispatchers.IO.limitedParallelism(1)
+    private val stateHolder = MutableStateFlow(state)
+
+    fun addReducer(reducer: Reducer<T>) {
+        reducers.add(reducer)
+    }
+
+    fun addReducers(reducers: List<Reducer<T>>) {
+        reducers.forEach { addReducer(it) }
+    }
+
+    fun addSaga(saga: Saga<T>) {
+        sagas.add(saga)
+    }
+
+    fun addSagas(sagas: List<Saga<T>>) {
+        sagas.forEach { addSaga(it) }
+    }
 
     /**
      * @return StateFlow<T> to observe state change where T is the type of the state
@@ -29,17 +44,17 @@ abstract class Store<T : State>(initialState: T) {
         get() = stateHolder
 
     /**
-     * Register an action listener
+     * Registers a state listener
      */
-    fun addMainThreadActionListener(listener: ActionListener) {
-        mainThreadActionListeners.add(listener)
+    fun addStateListener(listener: StateListener) {
+        mainThreadStateListener.add(listener)
     }
 
     /**
-     * Remove an action listener
+     * Removes a state listener
      */
-    fun removeMainThreadActionListener(listener: ActionListener) {
-        mainThreadActionListeners.remove(listener)
+    fun removeStateListener(listener: StateListener) {
+        mainThreadStateListener.remove(listener)
     }
 
     /**
@@ -61,37 +76,15 @@ abstract class Store<T : State>(initialState: T) {
                 // if something changes value fast to something and back, the UI thread may
                 // receive the first state and the last state.
                 stateHolder.value = state
+                alertListenerOnMainThread(state)
             }
-            alertListenerOnMainThread(action)
         }
     }
 
-    // UI Action Listener will always be notified on the main thread. For every action
-    private fun alertListenerOnMainThread(action: Action) {
+    // UI state listener will always be notified on the main thread
+    private fun alertListenerOnMainThread(state: T) {
         CoroutineScope(Dispatchers.Main).launch {
-            for (listener in mainThreadActionListeners) listener.onAction(action)
+            for (listener in mainThreadStateListener) listener.onStateChanged(state)
         }
     }
-
-    @Deprecated("use plus operator instead")
-    operator fun plusAssign(saga: Saga<T>) {
-        sagas.add(saga)
-    }
-
-    @Deprecated("use plus operator instead")
-    operator fun plusAssign(reducer: Reducer<T>) {
-        reducers.add(reducer)
-    }
-
-    operator fun plus(reducer: Reducer<T>) : Store<T> {
-        reducers.add(reducer)
-        return this
-    }
-
-    operator fun plus(saga: Saga<T>) : Store<T> {
-        sagas.add(saga)
-        return this
-    }
-
 }
-interface Action
