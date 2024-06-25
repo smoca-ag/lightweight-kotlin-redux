@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     `maven-publish`
+    signing
 }
 
 kotlin {
@@ -53,10 +54,11 @@ android {
 
 publishing {
     publications {
-        create<MavenPublication>("mavenJava") {
+        create<MavenPublication>("maven") {
             group = "ch.smoca.lib"
             artifactId = "lightweight-kotlin-redux"
             version = "6.0.0"
+            from(components["kotlin"])
             pom {
                 name = "Lightweight Kotlin Redux"
                 description = "A lightweight, kotlin multiplatform implementation of redux"
@@ -78,7 +80,8 @@ publishing {
                 }
                 scm {
                     connection = "scm:git:git://github.com:smoca-ag/lightweight-kotlin-redux.git"
-                    developerConnection = "scm:git:ssh:///github.com:smoca-ag/lightweight-kotlin-redux.git"
+                    developerConnection =
+                        "scm:git:ssh:///github.com:smoca-ag/lightweight-kotlin-redux.git"
                     url = "https://github.com/smoca-ag/lightweight-kotlin-redux"
                 }
             }
@@ -88,4 +91,12 @@ publishing {
     repositories {
         mavenCentral()
     }
+}
+
+signing {
+    val keyId: String? by project
+    val key: String? by project
+    val pw: String? by project
+    useInMemoryPgpKeys(keyId, key, pw)
+    sign(publishing.publications["maven"])
 }
