@@ -1,6 +1,7 @@
 stages:
   - lint
   - build
+  - publish
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -27,3 +28,14 @@ build/kmp:
   script:
     - cd kmp
     - ./gradlew :redux:assemble
+
+publish/library:
+  extends: .base_job
+  state: publish
+  script:
+    - cd kmp
+    - ORG_GRADLE_PROJECT_key = base64 -Ddi $SIGNING_SECRING
+    - ORG_GRADLE_PROJECT_keyId = $SIGNING_KEY_ID
+    - ORG_GRADLE_PROJECT_pw = $SIGNING_PW
+    - ./gradlew publish
+
