@@ -66,10 +66,8 @@ abstract class Store<T : State>(initialState: T) {
     @OptIn(ExperimentalCoroutinesApi::class)
     fun dispatch(action: Action) {
         CoroutineScope(singleThread).launch {
-
             val oldState = state
             state = apply(action, state)
-            sagas.forEach { saga -> saga.onAction(action, oldState, state) }
             if (state != oldState) {
                 // we will not post the state if it did not change.
                 // however, it is still possible that the UI receives the same state twice.
@@ -82,9 +80,11 @@ abstract class Store<T : State>(initialState: T) {
     }
 
     private fun apply(action: Action, state: T): T {
+        //dispatch for reducers
         var dispatch = { currentAction: Action, currentState: T ->
             reduce(currentAction, currentState)
         }
+        //dispatch for middlewares
         dispatch = middlewares.reversed().fold(dispatch) { lastDispatch, middleware ->
             middleware.apply(
                 action,
@@ -93,7 +93,25 @@ abstract class Store<T : State>(initialState: T) {
                 this::dispatch
             )
         }
+        //dispatch for sagas (always included). The SagaMiddleware will called before every other saga.
+        dispatch = applySagaMiddleware(action, state, dispatch)
+
         return dispatch(action, state)
+    }
+
+    private fun applySagaMiddleware(action: Action, state: T, dispatch: (action: Action, T) -> T): (action: Action, state: T) -> T {
+        return object : Middleware<T> {
+            override fun process(
+                action: Action,
+                state: T,
+                nextState: (action: Action, state: T) -> T,
+                dispatch: (action: Action) -> Unit
+            ): T {
+                val newState = nextState(action, state)
+                sagas.forEach { saga -> saga.onAction(action, state, newState) }
+                return newState
+            }
+        }.apply(action, state, dispatch, this::dispatch)
     }
 
     private fun reduce(action: Action, state: T): T {
