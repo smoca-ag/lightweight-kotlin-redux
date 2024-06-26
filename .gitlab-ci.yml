@@ -1,6 +1,7 @@
 stages:
   - lint
   - build
+  - publish
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -27,3 +28,12 @@ build/kmp:
   script:
     - cd kmp
     - ./gradlew :redux:assemble
+
+publish/library:
+  extends: .base_job
+  stage: publish
+  script:
+    - cd kmp
+    - ./gradlew publishToMavenCentral --no-configuration-cache
+  when: manual
+
