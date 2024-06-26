@@ -1,11 +1,11 @@
+import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    `maven-publish`
-    signing
+    id("com.vanniktech.maven.publish") version "0.29.0"
 }
 
 kotlin {
@@ -52,50 +52,39 @@ android {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            group = "ch.smoca.lib"
-            artifactId = "lightweight-kotlin-redux"
-            version = "6.0.0"
-            from(components["kotlin"])
-            pom {
-                name = "Lightweight Kotlin Redux"
-                description = "A lightweight, kotlin multiplatform implementation of redux"
-                url = "https://github.com/smoca-ag/lightweight-kotlin-redux"
-                licenses {
-                    license {
-                        name = "The Apache License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "smoca-ag"
-                        name = "Smoca AG"
-                        email = "info@smoca.ch"
-                        organization = "Smoca AG"
-                        organizationUrl = "https://smoca.ch"
-                    }
-                }
-                scm {
-                    connection = "scm:git:git://github.com:smoca-ag/lightweight-kotlin-redux.git"
-                    developerConnection =
-                        "scm:git:ssh:///github.com:smoca-ag/lightweight-kotlin-redux.git"
-                    url = "https://github.com/smoca-ag/lightweight-kotlin-redux"
-                }
+mavenPublishing {
+    coordinates(
+        groupId = "ch.smoca.lib",
+        artifactId = "lightweight-kotlin-redux",
+        version = "6.0.0"
+    )
+    pom {
+        name = "Lightweight Kotlin Redux"
+        description = "A lightweight, kotlin multiplatform implementation of redux"
+        inceptionYear = "2024"
+        url = "https://github.com/smoca-ag/lightweight-kotlin-redux"
+        licenses {
+            license {
+                name = "MIT"
+                url = "https://github.com/smoca-ag/lightweight-kotlin-redux?tab=readme-ov-file#license"
             }
+        }
+        developers {
+            developer {
+                id = "smoca-ag"
+                name = "Smoca AG"
+                email = "info@smoca.ch"
+                organization = "Smoca AG"
+                organizationUrl = "https://smoca.ch"
+            }
+        }
+        scm {
+            connection = "scm:git:git://github.com:smoca-ag/lightweight-kotlin-redux.git"
+            developerConnection = "scm:git:ssh:///github.com:smoca-ag/lightweight-kotlin-redux.git"
+            url = "https://github.com/smoca-ag/lightweight-kotlin-redux"
         }
     }
 
-    repositories {
-        mavenCentral()
-    }
-}
-
-signing {
-    val signingKey: String? by project
-    val signingPassword: String? by project
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign(publishing.publications["maven"])
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
 }
