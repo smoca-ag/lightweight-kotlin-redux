@@ -19,7 +19,9 @@ abstract class Store<T : State>(initialState: T) {
     private var state: T = initialState
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
     private val sagas: MutableList<Saga<T>> = mutableListOf()
+    private val middlewares: MutableList<Middleware<T>> = mutableListOf()
     private val reducers: MutableList<Reducer<T>> = mutableListOf()
+
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     private val singleThread = newSingleThreadContext("redux-dispatcher")
     private val stateHolder = MutableStateFlow(state)
@@ -30,6 +32,10 @@ abstract class Store<T : State>(initialState: T) {
 
     fun addSaga(saga: Saga<T>) {
         sagas.add(saga)
+    }
+
+    fun addMiddleware(middleware: Middleware<T>) {
+        this.middlewares.add(middleware)
     }
 
     /**
@@ -62,10 +68,8 @@ abstract class Store<T : State>(initialState: T) {
         CoroutineScope(singleThread).launch {
 
             val oldState = state
-            state = reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
-            for (saga in sagas) {
-                saga.onAction(action, oldState, state)
-            }
+            state = apply(action, state)
+            sagas.forEach { saga -> saga.onAction(action, oldState, state) }
             if (state != oldState) {
                 // we will not post the state if it did not change.
                 // however, it is still possible that the UI receives the same state twice.
@@ -75,6 +79,25 @@ abstract class Store<T : State>(initialState: T) {
                 alertListenerOnMainThread(state)
             }
         }
+    }
+
+    private fun apply(action: Action, state: T): T {
+        var dispatch = { currentAction: Action, currentState: T ->
+            reduce(currentAction, currentState)
+        }
+        dispatch = middlewares.reversed().fold(dispatch) { lastDispatch, middleware ->
+            middleware.apply(
+                action,
+                state,
+                lastDispatch,
+                this::dispatch
+            )
+        }
+        return dispatch(action, state)
+    }
+
+    private fun reduce(action: Action, state: T): T {
+        return reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
     }
 
     // UI state listener will always be notified on the main thread
