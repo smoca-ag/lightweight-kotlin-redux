@@ -1,3 +1,5 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -14,7 +16,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
-        publishLibraryVariants("release", "debug")
     }
 
     listOf(
@@ -58,6 +59,18 @@ mavenPublishing {
         artifactId = "lightweight-kotlin-redux",
         version = "6.0.0"
     )
+    configure(
+        KotlinMultiplatform(
+            // - `JavadocJar.None()` don't publish this artifact
+            // - `JavadocJar.Empty()` publish an empty jar
+            // - `JavadocJar.Dokka("dokkaHtml")` when using Kotlin with Dokka, where `dokkaHtml` is the name of the Dokka task that should be used as input
+            javadocJar = JavadocJar.Empty(),
+            // whether to publish a sources jar
+            sourcesJar = true,
+            // configure which Android library variants to publish if this project has an Android target
+            androidVariantsToPublish = listOf("debug", "release"),
+        )
+    )
     pom {
         name = "Lightweight Kotlin Redux"
         description = "A lightweight, kotlin multiplatform implementation of redux"
@@ -66,7 +79,8 @@ mavenPublishing {
         licenses {
             license {
                 name = "MIT"
-                url = "https://github.com/smoca-ag/lightweight-kotlin-redux?tab=readme-ov-file#license"
+                url =
+                    "https://github.com/smoca-ag/lightweight-kotlin-redux?tab=readme-ov-file#license"
             }
         }
         developers {
