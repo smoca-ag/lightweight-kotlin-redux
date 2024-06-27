@@ -26,6 +26,10 @@ abstract class Store<T : State>(initialState: T) {
     private val singleThread = newSingleThreadContext("redux-dispatcher")
     private val stateHolder = MutableStateFlow(state)
 
+    fun getState(): T {
+        return state
+    }
+
     fun addReducer(reducer: Reducer<T>) {
         reducers.add(reducer)
     }
@@ -67,7 +71,7 @@ abstract class Store<T : State>(initialState: T) {
     fun dispatch(action: Action) {
         CoroutineScope(singleThread).launch {
             val oldState = state
-            state = apply(action, state)
+            apply(action, state)
             if (state != oldState) {
                 // we will not post the state if it did not change.
                 // however, it is still possible that the UI receives the same state twice.
@@ -79,7 +83,7 @@ abstract class Store<T : State>(initialState: T) {
         }
     }
 
-    private fun apply(action: Action, state: T): T {
+    private fun apply(action: Action, state: T) {
         //dispatch for reducers
         var dispatch = { currentAction: Action, currentState: T ->
             reduce(currentAction, currentState)
@@ -88,34 +92,31 @@ abstract class Store<T : State>(initialState: T) {
         dispatch = middlewares.reversed().fold(dispatch) { lastDispatch, middleware ->
             middleware.apply(
                 action,
-                state,
-                lastDispatch,
-                this::dispatch
+                this,
+                lastDispatch
             )
         }
         //dispatch for sagas (always included). The SagaMiddleware will called before every other saga.
         dispatch = applySagaMiddleware(action, state, dispatch)
 
-        return dispatch(action, state)
+        dispatch(action, state)
     }
 
-    private fun applySagaMiddleware(action: Action, state: T, dispatch: (action: Action, T) -> T): (action: Action, state: T) -> T {
+    private fun applySagaMiddleware(action: Action, state: T, dispatch: (action: Action, T) -> Unit): (action: Action, state: T) -> Unit {
         return object : Middleware<T> {
             override fun process(
                 action: Action,
-                state: T,
-                nextState: (action: Action, state: T) -> T,
-                dispatch: (action: Action) -> Unit
-            ): T {
-                val newState = nextState(action, state)
-                sagas.forEach { saga -> saga.onAction(action, state, newState) }
-                return newState
+                store: Store<T>,
+                nextState: (action: Action, state: T) -> Unit,
+            ) {
+                nextState(action, state)
+                sagas.forEach { saga -> saga.onAction(action, state, store.getState()) }
             }
-        }.apply(action, state, dispatch, this::dispatch)
+        }.apply(action, this, dispatch)
     }
 
-    private fun reduce(action: Action, state: T): T {
-        return reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
+    private fun reduce(action: Action, state: T) {
+        this.state = reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
     }
 
     // UI state listener will always be notified on the main thread
