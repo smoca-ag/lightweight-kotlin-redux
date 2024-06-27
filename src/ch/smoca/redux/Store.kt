@@ -10,7 +10,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newSingleThreadContext
 
 /**
  * Store for redux like architecture
@@ -28,8 +27,8 @@ open class Store<T : State>(
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
     private lateinit var sagas: List<Pair<Saga<T>, CoroutineDispatcher>>
 
-    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-    private val singleThread = newSingleThreadContext("redux-dispatcher")
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val singleThread = Dispatchers.IO.limitedParallelism(1)
     private val stateHolder = MutableStateFlow(state)
     private val internalDispatch: (action: Action) -> Unit
 
@@ -46,6 +45,7 @@ open class Store<T : State>(
     private fun addSagas(initSagas: List<Saga<T>>) {
         // create a dispatcher view for each saga
         sagas = initSagas.map { saga ->
+            saga.dispatch = this::dispatch
             Pair(saga, Dispatchers.IO.limitedParallelism(1))
         }
     }
@@ -75,7 +75,6 @@ open class Store<T : State>(
      * All action listeners are alerted.
      * @param action an action to be dispatched
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun dispatch(action: Action) {
         CoroutineScope(singleThread).launch {
             val oldState = state
@@ -138,6 +137,5 @@ open class Store<T : State>(
             for (listener in mainThreadStateListener) listener.onStateChanged(state)
         }
     }
-
 
 }

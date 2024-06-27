@@ -1,6 +1,7 @@
 stages:
   - lint
   - build
+  - publish
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -14,16 +15,25 @@ variables:
   tags:
     - android_sdk_30
 
-
-
-lint/kotlin:
+lint/kmp:
   extends: .base_job
   stage: lint
   script:
+    - cd kmp
     - ./gradlew lint
 
-build/kotlin:
+build/kmp:
   extends: .base_job
   stage: build
   script:
-    - ./gradlew :redux-store:assemble
+    - cd kmp
+    - ./gradlew :redux:assemble
+
+publish/library:
+  extends: .base_job
+  stage: publish
+  script:
+    - cd kmp
+    - ./gradlew publishToMavenCentral --no-configuration-cache
+  when: manual
+
