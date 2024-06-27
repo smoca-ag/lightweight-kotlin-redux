@@ -1,14 +1,13 @@
 package ch.smoca.redux
 
 interface Middleware<T : State> {
-    fun process(action: Action, store: Store<T>, nextState: (action: Action, state: T) -> Unit)
+    fun process(action: Action, store: Store<T>, next: (action: Action) -> Unit)
     fun apply(
-        action: Action,
         store: Store<T>,
-        nextState: (action: Action, state: T) -> Unit,
-    ): (action: Action, state: T) -> Unit {
-        return { currentAction: Action, _: T ->
-            process(currentAction, store, nextState)
+        next: (action: Action) ->  Unit,
+    ): (action: Action) -> Unit {
+        return { currentAction: Action ->
+            process(currentAction, store, next)
         }
     }
 }
