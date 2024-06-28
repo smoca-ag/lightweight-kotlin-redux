@@ -342,7 +342,7 @@ class CountReducer: Reducer<AppState> {
 Reducers get all the dispatched actions (if not canceled or altered by a middleware). It is good practice to create a reducer per domain (e.g., Person, Network...) and only react to the actions that belong to the corresponding reducer.
 Also, if sealed classes are used as actions, the compiler will be able to check if the 'when' expression is exhaustive.
 
-Each reducer must return a state. If the state must be changed, a new state has to be created.
+Each reducer must return a state. If the state needs to be changed, kotlins `.copy()` function can be used, allowing you to alter some of its properties while keeping the rest unchanged. This way, a new state with new values can be returned without altering the original state.
 
 ## Middleware
 
