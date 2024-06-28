@@ -1,8 +1,12 @@
 package ch.smoca.redux
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -13,28 +17,37 @@ import kotlinx.coroutines.launch
  * @param T the type of your initial state
  * @param initialState the initial state
  */
-abstract class Store<T : State>(initialState: T) {
+open class Store<T : State>(
+    initialState: T,
+    private val reducers: List<Reducer<T>> = emptyList(),
+    sagas: List<Saga<T>> = emptyList(),
+    private val middlewares: List<Middleware<T>> = emptyList()
+) {
     private var state: T = initialState
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
-    private val sagas: MutableList<Saga<T>> = mutableListOf()
-    private val reducers: MutableList<Reducer<T>> = mutableListOf()
+    private lateinit var sagas: List<Pair<Saga<T>, CoroutineDispatcher>>
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val singleThread = Dispatchers.IO.limitedParallelism(1)
     private val stateHolder = MutableStateFlow(state)
+    private val internalDispatch: (action: Action) -> Unit
 
-    fun addReducer(reducer: Reducer<T>) {
-        reducers.add(reducer)
+    init {
+        addSagas(sagas)
+        internalDispatch = apply()
     }
 
-    fun addReducers(reducers: List<Reducer<T>>) {
-        reducers.forEach { addReducer(it) }
+    fun getState(): T {
+        return state
     }
 
-    fun addSaga(saga: Saga<T>) {
-        sagas.add(saga)
-    }
-
-    fun addSagas(sagas: List<Saga<T>>) {
-        sagas.forEach { addSaga(it) }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun addSagas(initSagas: List<Saga<T>>) {
+        // create a dispatcher view for each saga
+        sagas = initSagas.map { saga ->
+            saga.dispatch = this::dispatch
+            Pair(saga, Dispatchers.IO.limitedParallelism(1))
+        }
     }
 
     /**
@@ -64,12 +77,8 @@ abstract class Store<T : State>(initialState: T) {
      */
     fun dispatch(action: Action) {
         CoroutineScope(singleThread).launch {
-
             val oldState = state
-            state = reducers.fold(state) { preState, reducer -> reducer.reduce(action, preState) }
-            for (saga in sagas) {
-                saga.onAction(action, oldState, state)
-            }
+            internalDispatch(action)
             if (state != oldState) {
                 // we will not post the state if it did not change.
                 // however, it is still possible that the UI receives the same state twice.
@@ -81,10 +90,52 @@ abstract class Store<T : State>(initialState: T) {
         }
     }
 
+    private fun apply(): (action: Action) -> Unit {
+        //root reducers
+        var dispatch: (action: Action) -> Unit = { currentAction: Action ->
+            reduce(currentAction, this)
+        }
+        //dispatch for middlewares
+        dispatch = middlewares.reversed().fold(dispatch) { lastDispatch, middleware ->
+            middleware.apply(
+                this,
+                lastDispatch
+            )
+        }
+        //dispatch for sagas (always included). The SagaMiddleware will called before every other saga.
+        return applySagaMiddleware(dispatch)
+    }
+
+    private fun applySagaMiddleware(
+        dispatch: (action: Action) -> Unit
+    ): (action: Action) -> Unit {
+        return object : Middleware<T> {
+            override fun process(action: Action, store: Store<T>, next: (action: Action) -> Unit) {
+                val oldState = store.getState()
+                next(action)
+                val newState = store.getState()
+                sagas.forEach { sagaContext ->
+                    val saga = sagaContext.first
+                    val coroutineDispatcher = sagaContext.second
+                    CoroutineScope(coroutineDispatcher).launch {
+                        saga.onAction(action, oldState, newState)
+                    }
+                }
+            }
+        }.apply(this, dispatch)
+    }
+
+    private fun reduce(action: Action, store: Store<T>) {
+        val currentState = store.getState()
+        this.state =
+            reducers.fold(currentState) { preState, reducer -> reducer.reduce(action, preState) }
+    }
+
     // UI state listener will always be notified on the main thread
     private fun alertListenerOnMainThread(state: T) {
         CoroutineScope(Dispatchers.Main).launch {
             for (listener in mainThreadStateListener) listener.onStateChanged(state)
         }
     }
+
 }
