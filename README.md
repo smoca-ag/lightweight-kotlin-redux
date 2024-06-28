@@ -275,7 +275,7 @@ Following is a description of the components and how they are intended to be use
 
 ## State
 
-The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties should be used. The only component that should change the state is the [Reducer](#reducer)
+The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties are allowed. The only component that can change the state is the [Reducer](#reducer)
 
 ```kotlin
 data class AppState(
