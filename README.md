@@ -1,13 +1,13 @@
 # How To Use
 
 This library can be used for two scenarios which differ in creation:
-
 - [Project Setup](#project-setup)
   + [KMP State Definition](#kmp-state-definition)
   + [Native Implementation](#native-implementation)
     - [iOS](#ios)
     - [Android](#android) 
-- [Create Redux Components](#create-redux-components)
+- [Lightweigt Kotlin Redux](#lightweigt-kotlin-redux)
+- [Tutorial](#tutorial)
 
 # Project Setup
 
@@ -215,7 +215,7 @@ plugins {
 +    alias(libs.plugins.kotlinMultiplatform) apply false
 }
 ```
- 
+
 `app/build.gradle.kts`
 ```diff
 plugins {
@@ -267,21 +267,158 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-# Create Redux Components
-Here a short description of all components and what they do:
-* Store
-  - Holds the observable State
-  - Informs listeners of State changes
-  - Gets incoming actions (dispatch)
-  - Passes Action and current State to Reducers
-  - Passes Action, dispatch function, Old State and New State to Sagas
-* Reducer
-  - Can listen to Actions
-  - Manipulates the State
-* Sagas (middleware)
-  - Can listen to Actions
-  - Has access to old and new State
-  - Can dispatch Actions
+# Lightweigt Kotlin Redux
+
+The Lightweight Kotlin Redux Library is an opinionated implementation of the Flux Architecture, heavily inspired by Redux.
+It is used in many projects of the Smoca AG and has some design choices that fit our needs.
+Following is a description of the components and how they are intended to be used.
+
+## State
+
+The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties should be used. The only component that should change the state is the [Reducer](#reducer)
+
+```kotlin
+data class AppState(
+    val count: Int = 0
+) : State
+```
+
+## Store
+
+- Holds the observable State
+- Informs listeners of State changes
+- Can be used to dispatch actions
+- Passes Action and current State to Middlewares and Reducers
+- Passes Action, dispatch function, Old State and New State to Sagas
+
+```kotlin
+//create a store
+val store = Store<AppState>(
+  initialState =  /*initial state if any*/,
+  reducers = listOf(/*List of all reducers*/),
+  sagas = listOf(/*List of all sagas*/),
+	middlewares = listOf(/*List of all middlewares*/)
+)
+...
+// listen to changes
+store.stateObservable.collect() { state ->
+	Log.d("Change", "State: $state")
+}
+//or if you use Jetpack Compose
+val state by store.stateObservable.collectAsState()
+//dispatch some action. The action will run on a different thread.
+store.dispatch(Add(amount = 1))
+
+```
+
+All actions will be run on a single thread of the store. Dispatching an action will therefore never block the calling thread. Changes musst be observerd through the stateObservable.
+
+## Reducer
+
+- Listens to Actions
+- Manipulates the State
+- MUST NOT hold any state. 
+- Will return a new state depending on the action
+
+```kotlin
+class CountReducer: Reducer<AppState> {
+  //seald class lets compile check if 'when' expression is exhaustive
+    sealed class CountAction : Action {
+        data class Add(val amount: Int) : CountAction()
+    }
+
+    override fun reduce(action: Action, state: AppState): AppState {
+        (action as? CountAction) ?: return state //only process actions that concern us, otherwise return state
+        when (action) {
+            is CountAction.Add -> {
+              	//the copy-function on each data class can be used to create a new state
+                return state.copy(count = state.count + action.amount)
+            }
+        }
+    }
+}
+```
+
+Reducers get all the dispatched actions (if not canceled or altered by a middleware). It is good practice to create a reducer per domain (e.g., Person, Network...) and only react to the actions that belong to the corresponding reducer.
+Also, if sealed classes are used as actions, the compiler will be able to check if the 'when' expression is exhaustive.
+
+Each reducer must return a state. If the state must be changed, a new state has to be created.
+
+## Middleware
+
+- Listens to action
+- Has access to the store 
+- Can change or abort action flow
+- Can have an internal state
+
+Middlewares will be called before any reducer and can abort the action chain, alter the action and/or dispatch new actions.
+
+The following Middleware simply logs the action, the old and the new state.
+
+```kotlin
+class LogMiddleware : Middleware<AppState> {
+    override fun process(
+        action: Action,
+        store: Store<AppState>,
+        next: (action: Action) -> Unit
+    ) {
+        val currentState = store.getState() //read the current state from the store
+        // next(action) will pass the action to the next middleware in the chain. If next is not called, the action is aborted.
+        val result = next(action) 
+        // After the call to next, the action is reduced into the state (if no other middleware further down the road cancels it)
+        val newState = store.getState()
+        Log.d(
+            this::class.simpleName,
+            "Diff as Markdown:\n" +
+                    "Action:\n$action\n" +
+                    "Old:\n$currentState\n" +
+                    "New:\n$newState"
+        )
+    }
+}
+```
+
+In other Redux implementation, a middleware can also return something. This is not supported in this implementation, since all work of the store in run on a different thread than the one that called store.dispatch(action)
+
+## Saga
+
+* Can have internal state
+* Listens to Actions
+* Has access to old and new state
+* Can dispatch actions
+* Will be called on its own coroutine view.
+* Is intended for longrunning or asynchrone operation (calculations, fetch network data...)
+
+Sagas will be run by a middleware that is always added to the store. Asynchrone operations (network, BLE) should be implemented in a Saga. 
+
+```kotlin
+class BusySaga() : Saga<AppState>() {
+    sealed class Work: Action {
+        data object DoWork: Work()
+     
+    }
+    override suspend fun onAction(action: Action, oldState: AppState, newState: AppState) {
+        (action as? Work)?.let {
+            when (it) {
+                Work.DoWork -> {
+                    // a lof of heavy lifting
+                  	...
+                  //the saga has access to the dispach-function and can dispatch new action that should be processed by a reducer
+                  dispatch(WorkResult())
+                }
+            }
+            
+        }
+    }
+}
+```
+
+For convenience, the saga gets the state (old state) before the action and the state after the action (new state). To add some data to the state, it must dispatch an action.
+
+onAction() of a saga will be called on a view of the Dispatcher.IO with limited parallelism = 1. This means that onAction will be called for each action one by one, and even blocking operations in onAction will not block other sagas or the flow of the action to the reducers. But this does not mean that onAction can only be called again if the method returns. If you call another suspending function (for example, delay(1000)), the underlying coroutine is free to continue its work and may call onAction again. If real queuing behavior is required, then a middleware should be implemented to handle the actions differently.
+
+# Tutorial
+
 
 1. In your source directory create a structure like this:
 ```
@@ -347,7 +484,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 
-class NetworkSaga(dispatch: (action: Action) -> Unit) : Saga<AppState>(dispatch) {
+class NetworkSaga() : Saga<AppState>() {
     private val client = HttpClient {
         install(ContentNegotiation) {
             json()
@@ -360,42 +497,35 @@ class NetworkSaga(dispatch: (action: Action) -> Unit) : Saga<AppState>(dispatch)
         data class FetchPerson(val endpoint: String = "1") : NetworkAction()
     }
 
-    override fun onAction(action: Action, oldState: AppState, newState: AppState) {
+    override suspend fun onAction(action: Action, oldState: AppState, newState: AppState) {
         val networkAction = action as? NetworkAction ?: return
-
         when (networkAction) {
             is NetworkAction.FetchPerson -> getPerson(networkAction)
         }
     }
 
-    private fun getPerson(action: NetworkAction.FetchCatFact) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val url = "$baseUrl${action.endpoint}"
-            val response = client.get(url)
-            if (response.status.value in 200..299) {
-                val person: Person = response.body()
-                dispatch(PersonReducer.PersonAction.UpdateName(person.name))
-            }
-        }
+    private suspend fun getPerson(action: NetworkAction.FetchCatFact) {
+          val url = "$baseUrl${action.endpoint}"
+          val response = client.get(url)
+          if (response.status.value in 200..299) {
+              val person: Person = response.body()
+              dispatch(PersonReducer.PersonAction.UpdateName(person.name))
+          }
     }
 }
 ```
 
-5. Open `AppStore.kt` to create a setup function for the native platforms to call:
+5. Reducers, Sagas and Middlewares are supplied to the store in the constructor. :
 ```kotlin
-import ch.smoca.demo.reducers.PersonReducer
-import ch.smoca.demo.sagas.NetworkSaga
-import ch.smoca.redux.Store
-
-class AppStore(initialState: AppState = AppState()) : Store<AppState>(initialState) {
-    companion object {
-        fun setup(): AppStore =
-            AppStore().apply {
-                addSaga(NetworkSaga(this::dispatch))
-                addReducer(PersonReducer())
-            }
+private fun setUpStore(): Store<AppState> {
+        val store = Store<AppState>(
+            initialState =  PersistentSaga.loadState(this),
+            reducers = listOf(/List of all reducers/),
+            sagas = listOf(/List of all sagas/),
+            middlewares = listOf(/List of all middlewares/)
+        )
+        return store
     }
-}
 ```
 
 
