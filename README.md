@@ -108,7 +108,7 @@ kotlin {
 }
 ```
 
-9. The Project should now sync and build successfully. Continue by [creating the Redux components](#create-redux-components)
+9. The Project should now sync and build successfully. Continue by [creating all necessary components](#lightweigt-kotlin-redux)
 
 ## Native Implementation
 After finishing your Redux components this project must now be imported to our native environment.
@@ -275,7 +275,7 @@ Following is a description of the components and how they are intended to be use
 
 ## State
 
-The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties should be used. The only component that should change the state is the [Reducer](#reducer)
+The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties are allowed. The only component that can change the state is the [Reducer](#reducer)
 
 ```kotlin
 data class AppState(
@@ -342,7 +342,7 @@ class CountReducer: Reducer<AppState> {
 Reducers get all the dispatched actions (if not canceled or altered by a middleware). It is good practice to create a reducer per domain (e.g., Person, Network...) and only react to the actions that belong to the corresponding reducer.
 Also, if sealed classes are used as actions, the compiler will be able to check if the 'when' expression is exhaustive.
 
-Each reducer must return a state. If the state must be changed, a new state has to be created.
+Each reducer must return a state. If the state needs to be changed, kotlins `.copy()` function can be used, allowing you to alter some of its properties while keeping the rest unchanged. This way, a new state with new values can be returned without altering the original state.
 
 ## Middleware
 
@@ -389,7 +389,7 @@ In other Redux implementation, a middleware can return a value. This is not supp
 * Will be called on its own coroutine view.
 * Is intended for longrunning or asynchrone operation (calculations, fetch network data...)
 
-Sagas will be run by a middleware that is always added to the store. Asynchrone operations (network, BLE) should be implemented in a Saga. 
+Sagas will be run by a middleware that is always added to the store. Asynchronous operations (network, BLE) should be implemented in a Saga. 
 
 ```kotlin
 class BusySaga() : Saga<AppState>() {
