@@ -269,7 +269,7 @@ class MainActivity : ComponentActivity() {
 
 # Lightweigt Kotlin Redux
 
-The Lightweight Kotlin Redux Library is an opinionated implementation of the Flux Architecture, heavily inspired by Redux.
+The Lightweight Kotlin Redux Library is an opinionated implementation of the Redux Architecture.
 It is used in many projects of the Smoca AG and has some design choices that fit our needs.
 Following is a description of the components and how they are intended to be used.
 
@@ -378,7 +378,7 @@ class LogMiddleware : Middleware<AppState> {
 }
 ```
 
-In other Redux implementation, a middleware can also return something. This is not supported in this implementation, since all work of the store in run on a different thread than the one that called store.dispatch(action)
+In other Redux implementation, a middleware can return a value. This is not supported in this implementation, since `dispatch(action)` runs on a differtent thread and can not return anything. 
 
 ## Saga
 
