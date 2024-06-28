@@ -389,7 +389,7 @@ In other Redux implementation, a middleware can also return something. This is n
 * Will be called on its own coroutine view.
 * Is intended for longrunning or asynchrone operation (calculations, fetch network data...)
 
-Sagas will be run by a middleware that is always added to the store. Asynchrone operations (network, BLE) should be implemented in a Saga. 
+Sagas will be run by a middleware that is always added to the store. Asynchronous operations (network, BLE) should be implemented in a Saga. 
 
 ```kotlin
 class BusySaga() : Saga<AppState>() {
