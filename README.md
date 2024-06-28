@@ -108,7 +108,7 @@ kotlin {
 }
 ```
 
-9. The Project should now sync and build successfully. Continue by [creating the Redux components](#create-redux-components)
+9. The Project should now sync and build successfully. Continue by [creating all necessary components](#lightweigt-kotlin-redux)
 
 ## Native Implementation
 After finishing your Redux components this project must now be imported to our native environment.
