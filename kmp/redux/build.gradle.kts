@@ -38,6 +38,17 @@ kotlin {
                 implementation(libs.kotlin.coroutines.core)
             }
         }
+        commonTest {
+            kotlin {
+                srcDirs("../../tests")
+            }
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test:2.0.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+            }
+        }
+
+
     }
 }
 
