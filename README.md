@@ -1,3 +1,5 @@
+![Static Badge](https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D) [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE) ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
+
 # How To Use
 
 This library can be used for two scenarios which differ in creation:
