@@ -378,10 +378,10 @@ class LogMiddleware : Middleware<AppState> {
         val newState = store.getState()
         Log.d(
             this::class.simpleName,
-            "Diff as Markdown:\n" +
-                    "Action:\n$action\n" +
-                    "Old:\n$currentState\n" +
-                    "New:\n$newState"
+            "Diff:\n" +
+            "Action:\n$action\n" +
+            "Old:\n$currentState\n" +
+            "New:\n$newState"
         )
     }
 }
@@ -528,7 +528,7 @@ class NetworkSaga() : Saga<AppState>() {
 ```kotlin
 private fun setUpStore(): Store<AppState> {
         val store = Store<AppState>(
-            initialState =  PersistentSaga.loadState(this),
+            initialState =  null,
             reducers = listOf(/List of all reducers/),
             sagas = listOf(/List of all sagas/),
             middlewares = listOf(/List of all middlewares/)
