@@ -1,3 +1,12 @@
+<html>
+<div align="center">
+  <a href="https://central.sonatype.com/artifact/ch.smoca.lib/lightweight-kotlin-redux" ><img src="https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D?style=for-the-badge" alt="Version"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-A1C83D?style=for-the-badge" alt="License"></a>
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge" alt="Kotlin">
+
+</div>
+</html>
+
 # How To Use
 
 This library can be used for two scenarios which differ in creation:
@@ -538,4 +547,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
