@@ -19,11 +19,13 @@ class CancellableSagaMiddleware<T : State>(
 ) : Middleware<T> {
     //override this for tests
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+
     enum class Policy {
         TAKE_LATEST, // only the latest action is processed, previous actions are cancelled
         TAKE_EVERY, // every action is processed
         TAKE_LEADING, // only the first action is processed, subsequent actions are ignored until the first action is completed
-        CANCEL_LAST // cancel the last pending action, but do not process this action
+        CANCEL_LAST, // cancel the last pending action, but do not process this action
+        QUEUE // queue the action
     }
 
     interface CancellableAction : Action {
@@ -37,7 +39,9 @@ class CancellableSagaMiddleware<T : State>(
     ) {
         val jobs: MutableMap<KClass<out Action>, Job> = mutableMapOf()
     }
+
     private val contexts: MutableMap<Saga<T>, SagaContext<T>> = mutableMapOf()
+    private var queuedActions: Map<KClass<out Action>, List<Action>> = mutableMapOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun process(action: Action, store: Store<T>, next: (action: Action) -> Unit) {
@@ -45,8 +49,14 @@ class CancellableSagaMiddleware<T : State>(
         next(action)
         val newState = store.getState()
         sagas.forEach { saga ->
+
+            //remove all actions if the action has not policy QUEUE but there are queued actions
+            cleanupQueue(action)
+
             // Only accept actions that are explicitly allowed or all actions if no action is specified
-            if (saga.onlyAcceptAction() == null || saga.onlyAcceptAction()?.isInstance(action) != false){
+            if (saga.onlyAcceptAction() == null || saga.onlyAcceptAction()
+                    ?.isInstance(action) != false
+            ) {
                 val context =
                     contexts[saga] ?: SagaContext(saga, coroutineDispatcher.limitedParallelism(1))
                 contexts[saga] = context
@@ -56,6 +66,44 @@ class CancellableSagaMiddleware<T : State>(
                     Policy.TAKE_LATEST -> takeLatest(context, action, oldState, newState)
                     Policy.TAKE_LEADING -> takeLeading(context, action, oldState, newState)
                     Policy.CANCEL_LAST -> context.jobs[action::class]?.cancel()
+                    Policy.QUEUE -> queueAction(store::dispatch, context, action, oldState, newState)
+                }
+            }
+        }
+    }
+
+    private fun cleanupQueue(action: Action) {
+        //we will remove all the actions that are not queued anymore
+        if ((action is CancellableAction) && queuedActions[action::class]?.isNotEmpty() == true && (action as? CancellableAction)?.policy != Policy.QUEUE) {
+            val newMap = queuedActions.toMutableMap()
+            newMap[action::class] = listOf()
+            queuedActions = newMap.toMap()
+        }
+    }
+
+    private fun queueAction(dispatch: (action: Action) -> Unit,  context: SagaContext<T>, action: Action, oldState: T, newState: T) {
+        if ( context.jobs[action::class]?.isCompleted == false) {
+            //job still running, queue the action
+            val queuedCopy = queuedActions.toMutableMap()
+            //ensure action list
+            queuedCopy[action::class] = queuedCopy[action::class]?.plus(action) ?: listOf(action)
+            queuedActions = queuedCopy.toMap()
+        }
+        else {
+            context.jobs[action::class] = CoroutineScope(context.dispatcher).launch {
+                context.saga.onAction(action, oldState, newState)
+            }.apply {
+                invokeOnCompletion {
+                    if (queuedActions.isNotEmpty()) {
+                        queuedActions[action::class]?.firstOrNull()?.let { nextAction ->
+                            //create new list for thread safety
+                            val newList = queuedActions.toMutableMap()
+                            newList[action::class] = newList[action::class]?.toMutableList()?.drop(1)?.toList() ?: listOf()
+                            queuedActions = newList.toMap()
+                            //dispatch action again
+                            dispatch(nextAction)
+                        }
+                    }
                 }
             }
         }

@@ -16,12 +16,35 @@ class CancellableSagaTest {
 
     private lateinit var testSaga: TestSaga
     private lateinit var middleware: CancellableSagaMiddleware<TestState>
-    private val store = Store(TestState())
-
+    private lateinit var store: Store<TestState>
     @BeforeTest
     fun setUp() {
         testSaga = TestSaga()
         middleware = CancellableSagaMiddleware(listOf(testSaga))
+        store = Store(TestState(), middlewares = listOf(middleware))
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testQueue() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val store = Store(TestState(), middlewares = listOf(middleware), dispatcher = dispatcher)
+        middleware.coroutineDispatcher = dispatcher
+        launch {
+            (1..3).forEach { i ->
+                middleware.process(
+                    TestSaga.CancelledActions.QueuedAction(i),
+                    store
+                ) {}
+            }
+
+            testScheduler.advanceTimeBy(1500)
+            //after 1500ms, the first action should have been run the second if "processing"
+            assertEquals(2, testSaga.startedActions.size)
+            testScheduler.advanceTimeBy(10_000)
+            //3 actions should go trough.
+            assertEquals(3, testSaga.processedActions.size)
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -161,6 +184,7 @@ class CancellableSagaTest {
 
 class TestSaga : Saga<TestState>() {
     val processedActions = mutableListOf<Action>()
+    val startedActions = mutableListOf<Action>()
 
     sealed class OtherActions : Action {
         data class TestAction(val id: Int = 0) : OtherActions()
@@ -172,12 +196,18 @@ class TestSaga : Saga<TestState>() {
             override val policy: CancellableSagaMiddleware.Policy = CancellableSagaMiddleware.Policy.TAKE_EVERY
         ) : CancelledActions()
 
+        data class QueuedAction(
+            val id: Int = 0,
+            override val policy: CancellableSagaMiddleware.Policy = CancellableSagaMiddleware.Policy.QUEUE
+        ) : CancelledActions()
+
         sealed class SecondLevel : CancelledActions() {
             data object SecondLevelAction : SecondLevel()
         }
     }
 
     override suspend fun onAction(action: Action, oldState: TestState, newState: TestState) {
+        startedActions.add(action)
         delay(1_000)
         processedActions.add(action)
     }
