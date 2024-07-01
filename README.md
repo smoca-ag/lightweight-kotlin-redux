@@ -1,5 +1,6 @@
-![Version](https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D) [![License](https://img.shields.io/badge/License-MIT-A1C83D)
-](./LICENSE) ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF)
+![Version](https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D)
+[![License](https://img.shields.io/badge/License-MIT-A1C83D)](./LICENSE)
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF)
 
 # How To Use
 
