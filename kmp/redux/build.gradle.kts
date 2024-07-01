@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    id("com.vanniktech.maven.publish") version "0.29.0"
+    alias(libs.plugins.mavenpublish)
 }
 
 kotlin {
@@ -43,8 +43,8 @@ kotlin {
                 srcDirs("../../tests")
             }
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test:2.0.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
