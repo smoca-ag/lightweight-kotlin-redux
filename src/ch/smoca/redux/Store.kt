@@ -102,7 +102,7 @@ open class Store<T : State>(
                 lastDispatch
             )
         }
-        //dispatch for sagas (always included). The SagaMiddleware will called before every other saga.
+        //dispatch for sagas (always included). The SagaMiddleware will be called before every other saga.
         return applySagaMiddleware(dispatch)
     }
 

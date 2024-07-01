@@ -369,10 +369,10 @@ class LogMiddleware : Middleware<AppState> {
         val newState = store.getState()
         Log.d(
             this::class.simpleName,
-            "Diff as Markdown:\n" +
-                    "Action:\n$action\n" +
-                    "Old:\n$currentState\n" +
-                    "New:\n$newState"
+            "Diff:\n" +
+            "Action:\n$action\n" +
+            "Old:\n$currentState\n" +
+            "New:\n$newState"
         )
     }
 }
@@ -519,7 +519,7 @@ class NetworkSaga() : Saga<AppState>() {
 ```kotlin
 private fun setUpStore(): Store<AppState> {
         val store = Store<AppState>(
-            initialState =  PersistentSaga.loadState(this),
+            initialState =  null,
             reducers = listOf(/List of all reducers/),
             sagas = listOf(/List of all sagas/),
             middlewares = listOf(/List of all middlewares/)
@@ -538,5 +538,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 
