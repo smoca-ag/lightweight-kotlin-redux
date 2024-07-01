@@ -1,4 +1,5 @@
-![Static Badge](https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D) [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE) ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
+![Version](https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D) [![License](https://img.shields.io/badge/License-MIT-A1C83D)
+](./LICENSE) ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF)
 
 # How To Use
 
