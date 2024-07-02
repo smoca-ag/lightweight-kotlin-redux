@@ -1,4 +1,7 @@
-package ch.smoca.redux
+package ch.smoca.redux.sagas
+
+import ch.smoca.redux.Action
+import ch.smoca.redux.State
 
 abstract class Saga<T : State> {
     lateinit var dispatch: (action: Action) -> Unit

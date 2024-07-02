@@ -2,7 +2,6 @@ package ch.smoca.redux.sagas
 
 import ch.smoca.redux.Action
 import ch.smoca.redux.Middleware
-import ch.smoca.redux.Saga
 import ch.smoca.redux.State
 import ch.smoca.redux.Store
 import kotlinx.coroutines.CoroutineDispatcher
