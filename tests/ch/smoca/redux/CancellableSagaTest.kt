@@ -92,7 +92,7 @@ class CancellableSagaTest {
         assertEquals(
             1,
             (testSaga.processedActions.first() as TestSaga.CancelledActions.CancellableTestAction).id,
-            "last action must have id 1"
+            "the action must have id 1"
         )
     }
 
