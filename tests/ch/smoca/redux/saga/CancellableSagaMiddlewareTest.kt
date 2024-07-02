@@ -1,13 +1,18 @@
-package ch.smoca.redux
+package ch.smoca.redux.saga
 
 
+import ch.smoca.redux.Action
+import ch.smoca.redux.Saga
+import ch.smoca.redux.State
+import ch.smoca.redux.Store
+import ch.smoca.redux.saga.TestSaga.CancelledActions
 import ch.smoca.redux.sagas.CancellableSagaMiddleware
+import ch.smoca.redux.sagas.QueueingSagaMiddleware
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.KClass
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,45 +20,22 @@ import kotlin.test.assertEquals
 class CancellableSagaTest {
 
     private lateinit var testSaga: TestSaga
-    private lateinit var middleware: CancellableSagaMiddleware<TestState>
+    private lateinit var cancellableSagaMiddleware: CancellableSagaMiddleware<TestState>
     private lateinit var store: Store<TestState>
     @BeforeTest
     fun setUp() {
         testSaga = TestSaga()
-        middleware = CancellableSagaMiddleware(listOf(testSaga))
-        store = Store(TestState(), middlewares = listOf(middleware))
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @Test
-    fun testQueue() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        val store = Store(TestState(), middlewares = listOf(middleware), dispatcher = dispatcher)
-        middleware.coroutineDispatcher = dispatcher
-        launch {
-            (1..3).forEach { i ->
-                middleware.process(
-                    TestSaga.CancelledActions.QueuedAction(i),
-                    store
-                ) {}
-            }
-
-            testScheduler.advanceTimeBy(1500)
-            //after 1500ms, the first action should have been run the second if "processing"
-            assertEquals(2, testSaga.startedActions.size)
-            testScheduler.advanceTimeBy(10_000)
-            //3 actions should go trough.
-            assertEquals(3, testSaga.processedActions.size)
-        }
+        cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga))
+        store = Store(TestState())
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testTakeEvery() = runTest {
-        middleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
+        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEach { i ->
-                middleware.process(
+                cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(i),
                     store
                 ) {}
@@ -68,10 +50,10 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testTakeLatest() = runTest {
-        middleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
+        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEachIndexed() { index, _ ->
-                middleware.process(
+                cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(
                         id = index + 1,
                         policy = CancellableSagaMiddleware.Policy.TAKE_LATEST
@@ -95,10 +77,10 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testTakeLeading() = runTest {
-        middleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
+        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEachIndexed() { index, _ ->
-                middleware.process(
+                cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(
                         id = index + 1,
                         policy = CancellableSagaMiddleware.Policy.TAKE_LEADING
@@ -122,10 +104,10 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testCancel() = runTest {
-        middleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
+        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEachIndexed() { index, _ ->
-                middleware.process(
+                cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(
                         id = index + 1,
                         policy = CancellableSagaMiddleware.Policy.CANCEL_LAST
@@ -143,17 +125,19 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testFilterActions() = runTest {
-        middleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
-
+        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
+        cancellableSagaMiddleware.acceptedActions = mapOf(
+            testSaga to CancelledActions::class
+        )
         launch {
-            middleware.process(
+            cancellableSagaMiddleware.process(
                 TestSaga.OtherActions.TestAction(
                     id = 0
                 ),
                 store
             ) {}
 
-            middleware.process(
+            cancellableSagaMiddleware.process(
                 TestSaga.CancelledActions.CancellableTestAction(
                     id = 0,
                     policy = CancellableSagaMiddleware.Policy.TAKE_EVERY
@@ -161,7 +145,7 @@ class CancellableSagaTest {
                 store
             ) {}
 
-            middleware.process(
+            cancellableSagaMiddleware.process(
                 TestSaga.CancelledActions.SecondLevel.SecondLevelAction,
                 store
             ) {}
@@ -182,40 +166,5 @@ class CancellableSagaTest {
     }
 }
 
-class TestSaga : Saga<TestState>() {
-    val processedActions = mutableListOf<Action>()
-    val startedActions = mutableListOf<Action>()
 
-    sealed class OtherActions : Action {
-        data class TestAction(val id: Int = 0) : OtherActions()
-    }
-
-    sealed class CancelledActions : CancellableSagaMiddleware.CancellableAction {
-        data class CancellableTestAction(
-            val id: Int = 0,
-            override val policy: CancellableSagaMiddleware.Policy = CancellableSagaMiddleware.Policy.TAKE_EVERY
-        ) : CancelledActions()
-
-        data class QueuedAction(
-            val id: Int = 0,
-            override val policy: CancellableSagaMiddleware.Policy = CancellableSagaMiddleware.Policy.QUEUE
-        ) : CancelledActions()
-
-        sealed class SecondLevel : CancelledActions() {
-            data object SecondLevelAction : SecondLevel()
-        }
-    }
-
-    override suspend fun onAction(action: Action, oldState: TestState, newState: TestState) {
-        startedActions.add(action)
-        delay(1_000)
-        processedActions.add(action)
-    }
-
-    override fun onlyAcceptAction(): KClass<out Action> {
-        return CancelledActions::class
-    }
-}
-
-data class TestState(val testProperty: Int = 0) : State
 
