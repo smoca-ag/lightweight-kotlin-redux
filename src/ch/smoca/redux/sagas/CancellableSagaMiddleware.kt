@@ -44,7 +44,6 @@ class CancellableSagaMiddleware<T : State>(
     ) {
         val jobs: MutableMap<KClass<out Action>, Job> = mutableMapOf()
     }
-
     private val contexts: MutableMap<Saga<T>, SagaContext<T>> = mutableMapOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,7 +54,7 @@ class CancellableSagaMiddleware<T : State>(
         sagas.forEach { saga ->
             // Only accept actions that are explicitly allowed or all actions if no action is specified
             val accepted = acceptedActions
-            if (accepted?.get(saga) == null || accepted[saga]?.isInstance(action) != false
+            if (accepted?.get(saga) == null || accepted[saga]?.isInstance(action) == true
             ) {
                 val context =
                     contexts[saga] ?: SagaContext(saga, coroutineDispatcher.limitedParallelism(1))

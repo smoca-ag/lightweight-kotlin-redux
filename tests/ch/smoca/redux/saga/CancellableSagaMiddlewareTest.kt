@@ -37,7 +37,7 @@ class CancellableSagaTest {
             }
             //the test saga waits for 1000ms.
             testScheduler.advanceTimeBy(3000)
-            //3 actions should go trough.
+            //3 actions should go through.
             assertEquals(3, testSaga.processedActions.size)
         }
     }
@@ -57,9 +57,9 @@ class CancellableSagaTest {
                 ) {}
             }
         }
-        //the test saga waits for 1000ms. But only the last action should go trough the.
+        //the test saga waits for 1000ms. But only the last action should go through.
         testScheduler.advanceTimeBy(1001)
-        //only the last action should go trough the.
+        //only the last action should go through.
         assertEquals(1, testSaga.processedActions.size, "Only 1 action should go trough")
         //the last action must have id 3.
         assertEquals(
@@ -84,15 +84,15 @@ class CancellableSagaTest {
                 ) {}
             }
         }
-        //the test saga waits for 1000ms. But only the last action should go trough the.
+        //the test saga waits for 1000ms. But only the first action should go through.
         testScheduler.advanceTimeBy(2000)
-        //only the last action should go trough the.
-        assertEquals(1, testSaga.processedActions.size, "Only 1 action should go trough")
+        //only the first action should go through.
+        assertEquals(1, testSaga.processedActions.size, "Only 1 action should go through")
         //the action must have id 1.
         assertEquals(
             1,
             (testSaga.processedActions.first() as TestSaga.CancelledActions.CancellableTestAction).id,
-            "last action must have id 1"
+            "the action must have id 1"
         )
     }
 
@@ -113,8 +113,8 @@ class CancellableSagaTest {
         }
         //the test saga waits for 1000ms. But all action should be canceled
         testScheduler.advanceTimeBy(1001)
-        //no action should go trough
-        assertEquals(0, testSaga.processedActions.size, "No action should go trough")
+        //no action should go through
+        assertEquals(0, testSaga.processedActions.size, "No action should go through")
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
