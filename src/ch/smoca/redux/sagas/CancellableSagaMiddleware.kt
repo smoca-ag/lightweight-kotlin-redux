@@ -18,15 +18,13 @@ import kotlin.reflect.KClass
  * Actions to this middleware can be cancelled (@Policy).
  * Actions that are not CancelledActions will be processed as TAKE_EVERY.
  * If this middleware should be limited to certain actions, provide a map of Sagas to the accepted actions.
- * This Middleware does only process CancelledActions by default (change it with acceptedActions)
  */
 class CancellableSagaMiddleware<T : State>(
     private val sagas: List<Saga<T>>,
 ) : Middleware<T> {
     //override this for tests
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
-    var acceptedActions: Map<Saga<T>, KClass<out Action>>? =
-        sagas.associateWith { CancellableAction::class }
+    var acceptedActions: Map<Saga<T>, KClass<out Action>>? = null
 
     enum class Policy {
         TAKE_LATEST, // only the latest action is processed, previous actions are cancelled

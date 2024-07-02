@@ -22,13 +22,18 @@ import kotlinx.coroutines.launch
 open class Store<T : State>(
     initialState: T,
     private val reducers: List<Reducer<T>> = emptyList(),
-    sagas: List<Saga<T>> = emptyList(),
+    private val middlewares: List<Middleware<T>> = emptyList(),
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val middlewares: List<Middleware<T>> = listOf(CancellableSagaMiddleware(sagas))
 ) {
+    /* convenient constructor that takes sagas and creates a CancellableSagaMiddleware */
+    constructor(initialState: T, reducers: List<Reducer<T>>, sagas: List<Saga<T>>) : this(
+        initialState,
+        reducers,
+        listOf(CancellableSagaMiddleware(sagas))
+    )
+
     private var state: T = initialState
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
-    private val cancellableSagaMiddleware = CancellableSagaMiddleware(sagas)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val singleThread = dispatcher.limitedParallelism(1)

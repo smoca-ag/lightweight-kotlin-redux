@@ -1,15 +1,10 @@
 package ch.smoca.redux.saga
 
 
-import ch.smoca.redux.Action
-import ch.smoca.redux.Saga
-import ch.smoca.redux.State
 import ch.smoca.redux.Store
 import ch.smoca.redux.saga.TestSaga.CancelledActions
 import ch.smoca.redux.sagas.CancellableSagaMiddleware
-import ch.smoca.redux.sagas.QueueingSagaMiddleware
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
