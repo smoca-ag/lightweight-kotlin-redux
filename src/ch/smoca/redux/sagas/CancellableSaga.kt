@@ -46,7 +46,7 @@ class CancellableSagaMiddleware<T : State>(
         val newState = store.getState()
         sagas.forEach { saga ->
             // Only accept actions that are explicitly allowed or all actions if no action is specified
-            if (saga.onlyAcceptAction() == null || saga.onlyAcceptAction()?.isInstance(action) != false){
+            if (saga.onlyAcceptAction() == null || saga.onlyAcceptAction()?.isInstance(action) == true){
                 val context =
                     contexts[saga] ?: SagaContext(saga, coroutineDispatcher.limitedParallelism(1))
                 contexts[saga] = context
