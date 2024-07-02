@@ -57,7 +57,7 @@ class CancellableSagaTest {
                 ) {}
             }
         }
-        //the test saga waits for 1000ms. But only the last action should go trough the.
+        //the test saga waits for 1000ms. But only the last action should go through.
         testScheduler.advanceTimeBy(1001)
         //only the last action should go trough the.
         assertEquals(1, testSaga.processedActions.size, "Only 1 action should go trough")
