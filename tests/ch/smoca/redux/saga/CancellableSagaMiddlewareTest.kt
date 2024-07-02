@@ -21,7 +21,7 @@ class CancellableSagaTest {
     fun setUp() {
         testSaga = TestSaga()
         cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga))
-        store = Store(TestState())
+        store = Store(TestState(), listOf())
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

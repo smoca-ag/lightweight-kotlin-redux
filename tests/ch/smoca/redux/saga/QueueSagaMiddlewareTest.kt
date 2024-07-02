@@ -20,7 +20,7 @@ class QueueSagaMiddlewareTest {
     fun setUp() {
         testSaga = TestSaga()
         queueingSagaMiddleware = QueueingSagaMiddleware(listOf(testSaga))
-        store = Store(TestState())
+        store = Store(TestState(), listOf())
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,7 +32,7 @@ class QueueSagaMiddlewareTest {
             (1..3).forEach { i ->
                 queueingSagaMiddleware.process(
                     TestSaga.QueueActions.AddAction(i),
-                    Store(TestState())
+                    store
                 ) {}
             }
 
@@ -57,7 +57,7 @@ class QueueSagaMiddlewareTest {
             (1..3).forEach { i ->
                 queueingSagaMiddleware.process(
                     TestSaga.QueueActions.AddAction(i),
-                    Store(TestState())
+                    store
                 ) {}
             }
             testScheduler.advanceTimeBy(500)
