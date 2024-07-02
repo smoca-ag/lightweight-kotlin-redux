@@ -37,7 +37,7 @@ class CancellableSagaTest {
             }
             //the test saga waits for 1000ms.
             testScheduler.advanceTimeBy(3000)
-            //3 actions should go trough.
+            //3 actions should go through.
             assertEquals(3, testSaga.processedActions.size)
         }
     }
