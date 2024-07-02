@@ -21,14 +21,14 @@ import kotlinx.coroutines.launch
  */
 open class Store<T : State>(
     initialState: T,
-    private val reducers: List<Reducer<T>> = emptyList(),
+    private val reducers: List<Reducer<T>>,
     private val middlewares: List<Middleware<T>> = emptyList(),
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     /* convenient constructor that takes sagas and creates a CancellableSagaMiddleware */
     constructor(
         initialState: T,
-        reducers: List<Reducer<T>> = listOf(),
+        reducers: List<Reducer<T>>,
         sagas: List<Saga<T>>,
         middlewares: List<Middleware<T>> = listOf()
     ) : this(
