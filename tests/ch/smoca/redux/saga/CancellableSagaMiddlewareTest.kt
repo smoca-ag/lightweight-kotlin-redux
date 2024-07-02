@@ -18,6 +18,7 @@ class CancellableSagaTest {
     private lateinit var testSaga: TestSaga
     private lateinit var cancellableSagaMiddleware: CancellableSagaMiddleware<TestState>
     private lateinit var store: Store<TestState>
+
     @BeforeTest
     fun setUp() {
         testSaga = TestSaga()
@@ -122,10 +123,10 @@ class CancellableSagaTest {
     @Test
     fun testFilterActions() = runTest {
         //change TestSaga to only accept  CancelledActions
-        testSaga =  object : TestSaga() {
-            override fun onlyAcceptAction(): KClass<out Action> {
-                return CancelledActions::class
-            }
+        testSaga = object : TestSaga() {
+            override val acceptAction: KClass<out Action> =
+                CancelledActions::class
+
         }
         cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga))
         cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
