@@ -1,5 +1,6 @@
 package ch.smoca.redux
 
+import ch.smoca.redux.sagas.CancellableSagaMiddleware
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -7,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,7 +27,7 @@ open class Store<T : State>(
 ) {
     private var state: T = initialState
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
-    private lateinit var sagas: List<Pair<Saga<T>, CoroutineDispatcher>>
+    private val cancellableSagaMiddleware = CancellableSagaMiddleware(sagas)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val singleThread = Dispatchers.IO.limitedParallelism(1)
@@ -33,21 +35,11 @@ open class Store<T : State>(
     private val internalDispatch: (action: Action) -> Unit
 
     init {
-        addSagas(sagas)
         internalDispatch = apply()
     }
 
     fun getState(): T {
         return state
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun addSagas(initSagas: List<Saga<T>>) {
-        // create a dispatcher view for each saga
-        sagas = initSagas.map { saga ->
-            saga.dispatch = this::dispatch
-            Pair(saga, Dispatchers.IO.limitedParallelism(1))
-        }
     }
 
     /**
@@ -103,26 +95,7 @@ open class Store<T : State>(
             )
         }
         //dispatch for sagas (always included). The SagaMiddleware will be called before every other saga.
-        return applySagaMiddleware(dispatch)
-    }
-
-    private fun applySagaMiddleware(
-        dispatch: (action: Action) -> Unit
-    ): (action: Action) -> Unit {
-        return object : Middleware<T> {
-            override fun process(action: Action, store: Store<T>, next: (action: Action) -> Unit) {
-                val oldState = store.getState()
-                next(action)
-                val newState = store.getState()
-                sagas.forEach { sagaContext ->
-                    val saga = sagaContext.first
-                    val coroutineDispatcher = sagaContext.second
-                    CoroutineScope(coroutineDispatcher).launch {
-                        saga.onAction(action, oldState, newState)
-                    }
-                }
-            }
-        }.apply(this, dispatch)
+        return cancellableSagaMiddleware.apply(this, dispatch)
     }
 
     private fun reduce(action: Action, store: Store<T>) {
