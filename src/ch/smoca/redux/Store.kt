@@ -26,10 +26,15 @@ open class Store<T : State>(
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     /* convenient constructor that takes sagas and creates a CancellableSagaMiddleware */
-    constructor(initialState: T, reducers: List<Reducer<T>>, sagas: List<Saga<T>>, middlewares: List<Middleware<T>> = listOf()) : this(
+    constructor(
+        initialState: T,
+        reducers: List<Reducer<T>> = listOf(),
+        sagas: List<Saga<T>>,
+        middlewares: List<Middleware<T>> = listOf()
+    ) : this(
         initialState,
         reducers,
-        middlewares + listOf(CancellableSagaMiddleware(sagas))
+        listOf(CancellableSagaMiddleware(sagas)) + middlewares
     )
 
     private var state: T = initialState
