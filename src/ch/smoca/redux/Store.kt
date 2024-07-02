@@ -1,6 +1,7 @@
 package ch.smoca.redux
 
 import ch.smoca.redux.sagas.CancellableSagaMiddleware
+import ch.smoca.redux.sagas.Saga
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi

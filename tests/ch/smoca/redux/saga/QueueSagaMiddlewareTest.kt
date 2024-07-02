@@ -41,10 +41,14 @@ class QueueSagaMiddlewareTest {
                 TestSaga.QueueActions.CancelQueueAction(4),
                 store
             ) {}
-            assertEquals(1, testSaga.startedActions.size)
-            assertEquals(0, testSaga.processedActions.size)
+            assertEquals(1, testSaga.startedActions.size, "Only one action should be started")
+            assertEquals(
+                0,
+                testSaga.processedActions.size,
+                "No action can be processed at this point"
+            )
             testScheduler.advanceTimeBy(10_000)
-            assertEquals(0, testSaga.processedActions.size)
+            assertEquals(0, testSaga.processedActions.size, "All action must be cancelled")
         }
     }
 
@@ -62,13 +66,13 @@ class QueueSagaMiddlewareTest {
             }
             testScheduler.advanceTimeBy(500)
             //only one action should be started
-            assertEquals(1, testSaga.startedActions.size)
-            assertEquals(0, testSaga.processedActions.size)
+            assertEquals(1, testSaga.startedActions.size, "Only one action should be started")
+            assertEquals(0, testSaga.processedActions.size, "No action can be processed at this point")
             testScheduler.advanceTimeBy(1001)
             // only one should be processed
-            assertEquals(1, testSaga.processedActions.size)
+            assertEquals(1, testSaga.processedActions.size, "Only one action should be processed")
             testScheduler.advanceTimeBy(10_000)
-            assertEquals(3, testSaga.processedActions.size)
+            assertEquals(3, testSaga.processedActions.size, "All action must be processed")
         }
     }
 

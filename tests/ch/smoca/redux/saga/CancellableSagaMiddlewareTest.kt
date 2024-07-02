@@ -1,13 +1,14 @@
 package ch.smoca.redux.saga
 
 
+import ch.smoca.redux.Action
 import ch.smoca.redux.Store
-import ch.smoca.redux.saga.TestSaga.CancelledActions
 import ch.smoca.redux.sagas.CancellableSagaMiddleware
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlin.reflect.KClass
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -120,10 +121,15 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testFilterActions() = runTest {
+        //change TestSaga to only accept  CancelledActions
+        testSaga =  object : TestSaga() {
+            override fun onlyAcceptAction(): KClass<out Action> {
+                return CancelledActions::class
+            }
+        }
+        cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga))
         cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
-        cancellableSagaMiddleware.acceptedActions = mapOf(
-            testSaga to CancelledActions::class
-        )
+
         launch {
             cancellableSagaMiddleware.process(
                 TestSaga.OtherActions.TestAction(

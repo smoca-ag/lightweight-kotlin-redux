@@ -1,9 +1,7 @@
 package ch.smoca.redux.sagas
 
 import ch.smoca.redux.Action
-import ch.smoca.redux.Middleware
 import ch.smoca.redux.State
-import ch.smoca.redux.Store
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,9 +12,9 @@ import kotlinx.coroutines.launch
 
 /**
  * A middleware that queues actions and processes them in a saga.
- * This saga will only accept QueueingAction, other actions will forward to the next middleware.
+ * Actions != QueueingAction will as ADD.
  */
-class QueueingSagaMiddleware<T : State>(private val sagas: List<Saga<T>>) : Middleware<T> {
+class QueueingSagaMiddleware<T : State>(sagas: List<Saga<T>>) : SagaMiddleware<T>(sagas) {
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     enum class Policy {
@@ -40,33 +38,24 @@ class QueueingSagaMiddleware<T : State>(private val sagas: List<Saga<T>>) : Midd
 
     private val contexts: MutableMap<Saga<T>, SagaQueue<T>> = mutableMapOf()
 
-    override fun process(action: Action, store: Store<T>, next: (action: Action) -> Unit) {
 
-        val oldState = store.getState()
-        next(action)
-        val newState = store.getState()
+    override fun onActionForSaga(saga: Saga<T>, action: Action,  oldState: T, newState: T) {
+        val sagaQueue = contexts[saga] ?: SagaQueue()
+        contexts[saga] = sagaQueue
+        if (processToQueue(sagaQueue, (action as? QueueingAction)?.policy ?: Policy.ADD)) {
+            CoroutineScope(coroutineDispatcher).launch {
+                sagaQueue.queue.send(QueuedAction(action, oldState, newState))
+            }
 
-        (action as? QueueingAction)?.let {
-            sagas.forEach { saga ->
-                val sagaQueue = contexts[saga] ?: SagaQueue()
-                contexts[saga] = sagaQueue
-                if (processToQueue(sagaQueue, action.policy)) {
-                    CoroutineScope(coroutineDispatcher).launch {
-                        sagaQueue.queue.send(QueuedAction(action, oldState, newState))
-                    }
-
-                    //start consumer
-                    if (sagaQueue.consumer == null) {
-                        sagaQueue.consumer = CoroutineScope(coroutineDispatcher).launch {
-                            for (queuedAction in sagaQueue.queue) {
-                                saga.onAction(
-                                    queuedAction.action,
-                                    queuedAction.oldState,
-                                    queuedAction.newState
-                                )
-                            }
-                        }
-
+            //start consumer
+            if (sagaQueue.consumer == null) {
+                sagaQueue.consumer = CoroutineScope(coroutineDispatcher).launch {
+                    for (queuedAction in sagaQueue.queue) {
+                        saga.onAction(
+                            queuedAction.action,
+                            queuedAction.oldState,
+                            queuedAction.newState
+                        )
                     }
                 }
 
@@ -105,4 +94,6 @@ class QueueingSagaMiddleware<T : State>(private val sagas: List<Saga<T>>) : Midd
         sagaQueue.consumer?.cancel()
         sagaQueue.consumer = null
     }
+
+
 }
