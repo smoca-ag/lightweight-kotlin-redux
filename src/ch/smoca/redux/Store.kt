@@ -18,6 +18,9 @@ import kotlinx.coroutines.launch
  * If used with jetpack compose, make sure to mark the store as @Stable
  * @param T the type of your initial state
  * @param initialState the initial state
+ * @param reducers a list of reducers that will be applied in order
+ * @param middlewares a list of middlewares that will be applied in order
+ * @param dispatcher the dispatcher to use for the store. For tests it is useful to use a TestCoroutineDispatcher
  */
 open class Store<T : State>(
     initialState: T,
