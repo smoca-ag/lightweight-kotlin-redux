@@ -114,7 +114,7 @@ class CancellableSagaTest {
         //the test saga waits for 1000ms. But all action should be canceled
         testScheduler.advanceTimeBy(1001)
         //no action should go through
-        assertEquals(0, testSaga.processedActions.size, "No action should go trough")
+        assertEquals(0, testSaga.processedActions.size, "No action should go through")
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
