@@ -12,7 +12,6 @@ import kotlin.test.assertEquals
 
 class QueueSagaMiddlewareTest {
 
-
     private lateinit var store: Store<TestState>
     private lateinit var queueingSagaMiddleware: QueueingSagaMiddleware<TestState>
     private lateinit var testSaga: TestSaga
@@ -32,7 +31,7 @@ class QueueSagaMiddlewareTest {
         launch {
             (1..3).forEach { i ->
                 queueingSagaMiddleware.process(
-                    TestSaga.CancelledActions.QueuedAction(i),
+                    TestSaga.QueueActions.AddAction(i),
                     Store(TestState())
                 ) {}
             }

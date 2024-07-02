@@ -33,10 +33,6 @@ class TestSaga : Saga<TestState>() {
             override val policy: CancellableSagaMiddleware.Policy = CancellableSagaMiddleware.Policy.TAKE_EVERY
         ) : CancelledActions()
 
-        data class QueuedAction(
-            val id: Int = 0,
-        ) : QueueingSagaMiddleware.QueueingAction
-
         sealed class SecondLevel : CancelledActions() {
             data object SecondLevelAction : SecondLevel()
         }
