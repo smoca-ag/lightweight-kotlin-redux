@@ -25,7 +25,7 @@ open class Store<T : State>(
     private val middlewares: List<Middleware<T>> = emptyList(),
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    /* convenient constructor that takes sagas and creates a CancellableSagaMiddleware */
+    /* convenient constructor that takes sagas and creates a CancellableSagaMiddleware for them */
     constructor(
         initialState: T,
         reducers: List<Reducer<T>>,
