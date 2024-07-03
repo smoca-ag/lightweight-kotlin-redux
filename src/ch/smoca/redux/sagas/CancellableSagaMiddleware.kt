@@ -2,7 +2,6 @@ package ch.smoca.redux.sagas
 
 import ch.smoca.redux.Action
 import ch.smoca.redux.Middleware
-import ch.smoca.redux.Saga
 import ch.smoca.redux.State
 import ch.smoca.redux.Store
 import kotlinx.coroutines.CoroutineDispatcher
@@ -14,16 +13,21 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
+/**
+ * Actions to this middleware can be cancelled (@Policy).
+ * Actions that are not CancelledActions will be processed as TAKE_EVERY.
+ */
 class CancellableSagaMiddleware<T : State>(
-    private val sagas: List<Saga<T>>,
-) : Middleware<T> {
+    sagas: List<Saga<T>>,
+) : SagaMiddleware<T>(sagas) {
     //override this for tests
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+
     enum class Policy {
         TAKE_LATEST, // only the latest action is processed, previous actions are cancelled
         TAKE_EVERY, // every action is processed
         TAKE_LEADING, // only the first action is processed, subsequent actions are ignored until the first action is completed
-        CANCEL_LAST // cancel the last pending action, but do not process this action
+        CANCEL_LAST, // cancel the last pending action, but do not process this action
     }
 
     interface CancellableAction : Action {
@@ -40,24 +44,16 @@ class CancellableSagaMiddleware<T : State>(
     private val contexts: MutableMap<Saga<T>, SagaContext<T>> = mutableMapOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun process(action: Action, store: Store<T>, next: (action: Action) -> Unit) {
-        val oldState = store.getState()
-        next(action)
-        val newState = store.getState()
-        sagas.forEach { saga ->
-            // Only accept actions that are explicitly allowed or all actions if no action is specified
-            if (saga.onlyAcceptAction() == null || saga.onlyAcceptAction()?.isInstance(action) == true){
-                val context =
-                    contexts[saga] ?: SagaContext(saga, coroutineDispatcher.limitedParallelism(1))
-                contexts[saga] = context
-                val policy = (action as? CancellableAction)?.policy ?: Policy.TAKE_EVERY
-                when (policy) {
-                    Policy.TAKE_EVERY -> takeEvery(context, action, oldState, newState)
-                    Policy.TAKE_LATEST -> takeLatest(context, action, oldState, newState)
-                    Policy.TAKE_LEADING -> takeLeading(context, action, oldState, newState)
-                    Policy.CANCEL_LAST -> context.jobs[action::class]?.cancel()
-                }
-            }
+    override fun onActionForSaga(saga: Saga<T>, action: Action, oldState: T, newState: T) {
+        val context =
+            contexts[saga] ?: SagaContext(saga, coroutineDispatcher.limitedParallelism(1))
+        contexts[saga] = context
+        val policy = (action as? CancellableAction)?.policy ?: Policy.TAKE_EVERY
+        when (policy) {
+            Policy.TAKE_EVERY -> takeEvery(context, action, oldState, newState)
+            Policy.TAKE_LATEST -> takeLatest(context, action, oldState, newState)
+            Policy.TAKE_LEADING -> takeLeading(context, action, oldState, newState)
+            Policy.CANCEL_LAST -> context.jobs[action::class]?.cancel()
         }
     }
 
@@ -81,4 +77,6 @@ class CancellableSagaMiddleware<T : State>(
             context.saga.onAction(action, oldState, newState)
         }
     }
+
+
 }

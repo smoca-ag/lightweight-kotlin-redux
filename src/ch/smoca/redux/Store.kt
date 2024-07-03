@@ -1,6 +1,7 @@
 package ch.smoca.redux
 
 import ch.smoca.redux.sagas.CancellableSagaMiddleware
+import ch.smoca.redux.sagas.Saga
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -18,19 +19,33 @@ import kotlinx.coroutines.launch
  * If used with jetpack compose, make sure to mark the store as @Stable
  * @param T the type of your initial state
  * @param initialState the initial state
+ * @param reducers a list of reducers that will be applied in order
+ * @param middlewares a list of middlewares that will be applied in order
+ * @param dispatcher the dispatcher to use for the store. For tests it is useful to use a TestCoroutineDispatcher
  */
 open class Store<T : State>(
     initialState: T,
-    private val reducers: List<Reducer<T>> = emptyList(),
-    sagas: List<Saga<T>> = emptyList(),
-    private val middlewares: List<Middleware<T>> = emptyList()
+    private val reducers: List<Reducer<T>>,
+    private val middlewares: List<Middleware<T>> = emptyList(),
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
+    /* convenient constructor that takes sagas and creates a CancellableSagaMiddleware for them */
+    constructor(
+        initialState: T,
+        reducers: List<Reducer<T>>,
+        sagas: List<Saga<T>>,
+        middlewares: List<Middleware<T>> = listOf()
+    ) : this(
+        initialState,
+        reducers,
+        listOf(CancellableSagaMiddleware(sagas)) + middlewares
+    )
+
     private var state: T = initialState
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
-    private val cancellableSagaMiddleware = CancellableSagaMiddleware(sagas)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val singleThread = Dispatchers.IO.limitedParallelism(1)
+    private val singleThread = dispatcher.limitedParallelism(1)
     private val stateHolder = MutableStateFlow(state)
     private val internalDispatch: (action: Action) -> Unit
 
@@ -84,18 +99,16 @@ open class Store<T : State>(
 
     private fun apply(): (action: Action) -> Unit {
         //root reducers
-        var dispatch: (action: Action) -> Unit = { currentAction: Action ->
+        val dispatch: (action: Action) -> Unit = { currentAction: Action ->
             reduce(currentAction, this)
         }
         //dispatch for middlewares
-        dispatch = middlewares.reversed().fold(dispatch) { lastDispatch, middleware ->
+        return middlewares.reversed().fold(dispatch) { lastDispatch, middleware ->
             middleware.apply(
                 this,
                 lastDispatch
             )
         }
-        //dispatch for sagas (always included). The SagaMiddleware will be called before every other saga.
-        return cancellableSagaMiddleware.apply(this, dispatch)
     }
 
     private fun reduce(action: Action, store: Store<T>) {
