@@ -6,10 +6,13 @@ import ch.smoca.redux.sagas.CancellableSagaMiddleware
 import ch.smoca.redux.sagas.QueueingSagaMiddleware
 import ch.smoca.redux.sagas.Saga
 import kotlinx.coroutines.delay
+import kotlin.reflect.KClass
 
 open class TestSaga() : Saga<TestState>() {
     val processedActions = mutableListOf<Action>()
     val startedActions = mutableListOf<Action>()
+    override val acceptAction: KClass<out Action>?
+        get() = super.acceptAction
 
     sealed class OtherActions : Action {
         data class TestAction(val id: Int = 0) : OtherActions()

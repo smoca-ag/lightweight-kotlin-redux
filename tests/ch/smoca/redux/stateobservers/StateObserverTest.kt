@@ -58,10 +58,13 @@ class StateObserverTest {
 
     }
 
-    class TestStateObserver: StateObserver() {
+    class TestStateObserver: StateObserver<TestState>() {
         var stateDidChange: Boolean = false
-        override fun onStateChanged(state: State) {
+        override fun onStateChanged(state: TestState) {
             stateDidChange = true
         }
     }
+
+
+
 }

@@ -12,11 +12,15 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 
 class StateObserverMiddleware<T : State>(
-    list: List<StateObserver>,
+    list: List<StateObserver<T>>,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : Middleware<T> {
 
-    data class Context(val observer: StateObserver, val dispatcher: CoroutineDispatcher)
+    data class Context<T : State>(
+        val observer: StateObserver<T>,
+        val dispatcher: CoroutineDispatcher
+    )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val observers = list.map {
         Context(it, coroutineDispatcher.limitedParallelism(1))
