@@ -30,7 +30,7 @@ Following is a description of the components and how they are intended to be use
 
 - The data
 - Only use data classes with `val` properties. 
-- The state MUST be immutable
+- The state **MUST** be immutable
 
 The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties are allowed. The only component that can change the state is the [Reducer](#reducer)
 
@@ -53,7 +53,6 @@ data class AppState(
 val store = Store<AppState>(
   initialState =  /*initial state if any*/,
   reducers = listOf(/*List of all reducers*/),
-  sagas = listOf(/*List of all sagas*/),
 	middlewares = listOf(/*List of all middlewares*/)
 )
 ...
