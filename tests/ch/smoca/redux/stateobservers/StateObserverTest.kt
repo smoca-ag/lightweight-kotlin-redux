@@ -27,7 +27,7 @@ class StateObserverTest {
     @BeforeTest
     fun setUp() {
         val dispatcher = StandardTestDispatcher(TestCoroutineScheduler())
-        observerMiddleware = StateObserverMiddleware<TestState>(listOf(testObserver), dispatcher)
+        observerMiddleware = StateObserverMiddleware(listOf(testObserver), dispatcher)
         store = Store(TestState(), listOf(TestReducer()), listOf(observerMiddleware),  dispatcher)
         Dispatchers.setMain(dispatcher)
     }
