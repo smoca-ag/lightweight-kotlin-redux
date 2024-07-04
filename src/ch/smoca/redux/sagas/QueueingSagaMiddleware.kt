@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
  */
 class QueueingSagaMiddleware<T : State>(
     sagas: List<Saga<T>>,
-    val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : SagaMiddleware<T>(sagas) {
 
 

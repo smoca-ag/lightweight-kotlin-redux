@@ -19,10 +19,8 @@ import kotlin.reflect.KClass
  */
 class CancellableSagaMiddleware<T : State>(
     sagas: List<Saga<T>>,
-    val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : SagaMiddleware<T>(sagas) {
-    //override this for tests
-
 
     enum class Policy {
         TAKE_LATEST, // only the latest action is processed, previous actions are cancelled

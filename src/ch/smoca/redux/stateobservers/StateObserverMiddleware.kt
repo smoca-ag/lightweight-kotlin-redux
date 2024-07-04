@@ -22,6 +22,13 @@ class StateObserverMiddleware<T : State>(
         Context(it, coroutineDispatcher.limitedParallelism(1))
     }
 
+    override fun apply(store: Store<T>, next: (action: Action) -> Unit): (action: Action) -> Unit {
+        observers.forEach { context ->
+            context.observer.dispatch = store::dispatch
+        }
+        return super.apply(store, next)
+    }
+
     override fun process(
         action: Action,
         store: Store<T>,

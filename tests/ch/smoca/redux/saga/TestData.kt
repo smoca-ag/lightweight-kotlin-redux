@@ -7,7 +7,7 @@ import ch.smoca.redux.sagas.QueueingSagaMiddleware
 import ch.smoca.redux.sagas.Saga
 import kotlinx.coroutines.delay
 
-open class TestSaga : Saga<TestState>() {
+open class TestSaga() : Saga<TestState>() {
     val processedActions = mutableListOf<Action>()
     val startedActions = mutableListOf<Action>()
 
