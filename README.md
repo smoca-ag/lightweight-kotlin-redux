@@ -151,7 +151,9 @@ class ExampleStateObserver: StateObserver<TestState>() {
    override fun onStateChanged(state: TestState) {
       /*state has changed. */
       if (state.testProperty == 1) {
-      /* do something */
+        /* do something */
+        //the StateObserver has access to the dispach-function and can dispatch new action that should be processed by a reducer  
+        dispatch(WorkResult())
    		}
    }
  }
@@ -167,7 +169,6 @@ The `StateObserver` will be called for any state change, not just the specific c
 * Listens to Actions
 * Has access to old and new state
 * Can dispatch actions
-* Will be called on its own coroutine view.
 * Is intended for longrunning or asynchrone operation (calculations, fetch network data...)
 
 Sagas are typically initiated by an action and then proceed through multiple processing steps. When used with `CancellableSagaMiddleware`, the steps can be canceled if necessary. With `QueueingSagaMiddleware`, the subsequent actions are queued until all steps of the preceding action are fully completed.
