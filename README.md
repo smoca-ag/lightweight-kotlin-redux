@@ -73,8 +73,8 @@ All actions will be run on a single thread of the store. Dispatching an action w
 
 - Listens to Actions
 - Manipulates the State
-- MUST NOT hold any state. 
-- Will return a new state depending on the action
+- **MUST NOT** hold any state. 
+- Will return a new state depending on the action or the old state
 
 ```kotlin
 class CountReducer: Reducer<AppState> {
