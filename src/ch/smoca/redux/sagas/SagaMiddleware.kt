@@ -18,8 +18,8 @@ abstract class SagaMiddleware<T : State>(private val sagas: List<Saga<T>>) : Mid
         val newState = store.getState()
         sagas.forEach { saga ->
             //only call the saga if the action is accepted
-            val acceptedClass = saga.acceptAction
-            if (acceptedClass == null || acceptedClass.isInstance(action)
+            val acceptAction = saga.acceptAction
+            if (acceptAction == null || acceptAction.isInstance(action)
             ) {
                 onActionForSaga(saga, action, oldState, newState)
             }

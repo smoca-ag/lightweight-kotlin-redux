@@ -14,8 +14,11 @@ import kotlinx.coroutines.launch
  * A middleware that queues actions and processes them in a saga.
  * Actions != QueueingAction will as ADD.
  */
-class QueueingSagaMiddleware<T : State>(sagas: List<Saga<T>>) : SagaMiddleware<T>(sagas) {
-    var coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+class QueueingSagaMiddleware<T : State>(
+    sagas: List<Saga<T>>,
+    val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : SagaMiddleware<T>(sagas) {
+
 
     enum class Policy {
         ADD, // add the action to the queue
@@ -39,7 +42,7 @@ class QueueingSagaMiddleware<T : State>(sagas: List<Saga<T>>) : SagaMiddleware<T
     private val contexts: MutableMap<Saga<T>, SagaQueue<T>> = mutableMapOf()
 
 
-    override fun onActionForSaga(saga: Saga<T>, action: Action,  oldState: T, newState: T) {
+    override fun onActionForSaga(saga: Saga<T>, action: Action, oldState: T, newState: T) {
         val sagaQueue = contexts[saga] ?: SagaQueue()
         contexts[saga] = sagaQueue
         if (processToQueue(sagaQueue, (action as? QueueingAction)?.policy ?: Policy.ADD)) {
