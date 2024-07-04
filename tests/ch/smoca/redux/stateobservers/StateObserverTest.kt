@@ -15,13 +15,14 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class StateObserverTest {
 
     private lateinit var store: Store<TestState>
     private lateinit var observerMiddleware: StateObserverMiddleware<TestState>
-    private var testObserver : TestStateObserver<TestState> = TestStateObserver()
+    private var testObserver : TestStateObserver = TestStateObserver()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
@@ -34,6 +35,9 @@ class StateObserverTest {
 
     @Test
     fun testStateObserver() = runTest{
+        store.dispatch(TestAction(0))
+        testScheduler.advanceUntilIdle()
+        assertFalse(testObserver.stateDidChange, "State observer should not have been called, because there is already testProperty = 0 in the state")
         store.dispatch(TestAction(1))
         testScheduler.advanceUntilIdle()
         assertTrue(testObserver.stateDidChange, "State observer should have been called")
@@ -54,7 +58,7 @@ class StateObserverTest {
 
     }
 
-    class TestStateObserver<TestState>: StateObserver() {
+    class TestStateObserver: StateObserver() {
         var stateDidChange: Boolean = false
         override fun onStateChanged(state: State) {
             stateDidChange = true

@@ -27,11 +27,15 @@ class StateObserverMiddleware<T : State>(
         store: Store<T>,
         next: (action: Action) -> Unit
     ) {
+        val oldState = store.getState()
         next(action)
         val state = store.getState()
-        observers.forEach { context ->
-             CoroutineScope(context.dispatcher).launch {
-                context.observer.onStateChanged(state)
+
+        if (oldState != state) {
+            observers.forEach { context ->
+                CoroutineScope(context.dispatcher).launch {
+                    context.observer.onStateChanged(state)
+                }
             }
         }
     }
