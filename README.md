@@ -30,7 +30,7 @@ Following is a description of the components and how they are intended to be use
 
 - The data
 - Only use data classes with `val` properties. 
-- The state **MUST** be immutable
+- The state **MUST** be immutable (which it is, if there are only `val` properties)
 
 The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties are allowed. The only component that can change the state is the [Reducer](#reducer)
 
