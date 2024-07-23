@@ -4,7 +4,6 @@ import ch.smoca.redux.Action
 import ch.smoca.redux.Reducer
 import ch.smoca.redux.State
 import ch.smoca.redux.Store
-import ch.smoca.redux.sagas.QueueingSagaMiddleware
 import ch.smoca.redux.stateobservers.StateObserver
 import ch.smoca.redux.stateobservers.StateObserverMiddleware
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +33,7 @@ class StateObserverTest {
     }
 
     @Test
-    fun testStateObserver() = runTest{
+    fun testOnlyCallObserversOnChange() = runTest{
         store.dispatch(TestAction(0))
         testScheduler.advanceUntilIdle()
         assertFalse(testObserver.stateDidChange, "State observer should not have been called, because there is already testProperty = 0 in the state")
