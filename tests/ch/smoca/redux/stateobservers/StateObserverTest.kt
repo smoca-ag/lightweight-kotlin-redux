@@ -33,13 +33,17 @@ class StateObserverTest {
     }
 
     @Test
-    fun testOnlyCallObserversOnChange() = runTest{
+    fun testNoChangeChange() = runTest{
         store.dispatch(TestAction(0))
         testScheduler.advanceUntilIdle()
         assertFalse(testObserver.stateDidChange, "State observer should not have been called, because there is already testProperty = 0 in the state")
+    }
+
+    @Test
+    fun testCallObserverOnChange() = runTest{
         store.dispatch(TestAction(1))
         testScheduler.advanceUntilIdle()
-        assertTrue(testObserver.stateDidChange, "State observer should have been called")
+        assertTrue(testObserver.stateDidChange, "State observer should have been called, because state has changed")
     }
 
     data class TestState(val testProperty: Int = 0) : State
