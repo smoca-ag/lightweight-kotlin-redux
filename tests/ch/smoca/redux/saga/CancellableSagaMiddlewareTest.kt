@@ -4,10 +4,13 @@ package ch.smoca.redux.saga
 import ch.smoca.redux.Action
 import ch.smoca.redux.Store
 import ch.smoca.redux.sagas.CancellableSagaMiddleware
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlin.reflect.KClass
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -19,17 +22,19 @@ class CancellableSagaTest {
     private lateinit var cancellableSagaMiddleware: CancellableSagaMiddleware<TestState>
     private lateinit var store: Store<TestState>
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
-    fun setUp() {
+    fun setUp() = run {
         testSaga = TestSaga()
-        cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga))
+        val dispatcher = StandardTestDispatcher(TestCoroutineScheduler())
+        cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga), dispatcher)
         store = Store(TestState(), listOf())
+        Dispatchers.setMain(dispatcher)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testTakeEvery() = runTest {
-        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEach { i ->
                 cancellableSagaMiddleware.process(
@@ -47,7 +52,6 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testTakeLatest() = runTest {
-        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEachIndexed() { index, _ ->
                 cancellableSagaMiddleware.process(
@@ -74,7 +78,6 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testTakeLeading() = runTest {
-        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEachIndexed() { index, _ ->
                 cancellableSagaMiddleware.process(
@@ -101,7 +104,6 @@ class CancellableSagaTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testCancel() = runTest {
-        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
         launch {
             (1..3).forEachIndexed() { index, _ ->
                 cancellableSagaMiddleware.process(
@@ -128,8 +130,7 @@ class CancellableSagaTest {
                 CancelledActions::class
 
         }
-        cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga))
-        cancellableSagaMiddleware.coroutineDispatcher = StandardTestDispatcher(testScheduler)
+        cancellableSagaMiddleware = CancellableSagaMiddleware(listOf(testSaga), StandardTestDispatcher(testScheduler))
 
         launch {
             cancellableSagaMiddleware.process(
