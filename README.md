@@ -1,6 +1,6 @@
 <html>
 <div align="center">
-  <a href="https://central.sonatype.com/artifact/ch.smoca.lib/lightweight-kotlin-redux" ><img src="https://img.shields.io/badge/mavenCentral-6.1.0-A1C83D?style=for-the-badge" alt="Version"></a>
+  <a href="https://central.sonatype.com/artifact/ch.smoca.lib/lightweight-kotlin-redux" ><img src="https://img.shields.io/badge/mavenCentral-6.1.1-A1C83D?style=for-the-badge" alt="Version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-A1C83D?style=for-the-badge" alt="License"></a>
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge" alt="Kotlin">
 
