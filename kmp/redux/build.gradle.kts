@@ -68,7 +68,7 @@ mavenPublishing {
     coordinates(
         groupId = "ch.smoca.lib",
         artifactId = "lightweight-kotlin-redux",
-        version = "6.1.0"
+        version = "6.1.1"
     )
     configure(
         KotlinMultiplatform(
