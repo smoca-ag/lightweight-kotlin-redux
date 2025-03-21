@@ -166,7 +166,11 @@ class ExampleStateObserver: StateObserver<TestState>() {
 
 `onStateChanged` will be called on coroutine with limitedParallelism = 1. The methode may be called again as soon as the coroutine is freed (for example when calling a other suspending function).
 
-The `StateObserver` will be called for any state change, not just the specific changes it accesses. It is the responsibility of the `StateObserver` to ensure that processes are not unintentionally triggered more than once.
+The `StateObserver` will be called for any state change, not just the specific changes it accesses.
+It is the responsibility of the `StateObserver` to ensure that processes are not unintentionally triggered more than once.
+If only a sub state should be listened to, classes can overwrite `selectSubState`.
+Instead of the whole state, the selected sub state will be compared. Then only if a difference 
+between these sub states is detected, `onStateChanged` will be triggered.
 
 ## Saga
 

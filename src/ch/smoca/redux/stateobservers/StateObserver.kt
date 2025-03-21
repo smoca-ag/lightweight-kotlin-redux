@@ -15,6 +15,10 @@ import ch.smoca.redux.State
  * for scenarios where reacting to a state change should trigger further state updates or operations handled by
  * reducers.
  *
+ * Classes that inherit `StateObserver` can overwrite [selectSubState].
+ * Instead of the whole state, the selected sub state will be compared. If a difference is
+ * detected, [onStateChanged] will be triggered.
+ *
  * **Usage Example:**
  *
  * ```
