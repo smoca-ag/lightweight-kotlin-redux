@@ -12,8 +12,46 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Store for redux like architecture
- * If used with jetpack compose, make sure to mark the store as @Stable
+ * A store that holds the application state and coordinates updates.
+ *
+ * The Store is responsible for maintaining the current state, dispatching actions,
+ * and notifying subscribers when the state changes. It wires together reducers, middlewares,
+ * and sagas to implement the Redux architecture.
+ *
+ * **Usage Example: **
+ *
+ * ```
+ * class ExampleApplication : Application() {
+ *     lateinit var store: Store<AppState>
+ *
+ *     override fun onCreate() {
+ *         super.onCreate()
+ *         store = Store(
+ *                     initialState = TestState(),
+ *                     reducers = listOf(ExampleReducer()),
+ *                     sagas = listOf(ExampleSaga(),
+ *                     middlewares = listOf(ExampleMiddleware()),
+ *                 )
+ *     }
+ * }
+ * ```
+ *
+ * **Listen to changes**
+ *
+ * ```
+ * store.stateObservable.collect() { state ->
+ * 	Log.d("Change", "State: $state")
+ * }
+ *
+ * // or if you use Jetpack Compose
+ * val state by store.stateObservable.collectAsState()
+ * ```
+ *
+ * **dispatch some action. The action will run on a different thread.**
+ * ```
+ * store.dispatch(Add(amount = 1))
+ * ```
+ *
  * @param T the type of your initial state
  * @param initialState the initial state
  * @param reducers a list of reducers that will be applied in order
@@ -41,7 +79,6 @@ open class Store<T : State>(
     private var state: T = initialState
     private val mainThreadStateListener: MutableList<StateListener> = mutableListOf()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val singleThread = dispatcher.limitedParallelism(1)
     private val stateHolder = MutableStateFlow(state)
     private val internalDispatch: (action: Action) -> Unit
