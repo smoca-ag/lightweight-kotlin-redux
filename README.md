@@ -1,4 +1,4 @@
-<html>
+<html lang="en">
 <div align="center">
   <a href="https://central.sonatype.com/artifact/ch.smoca.lib/lightweight-kotlin-redux" ><img src="https://img.shields.io/badge/mavenCentral-6.1.1-A1C83D?style=for-the-badge" alt="Version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-A1C83D?style=for-the-badge" alt="License"></a>
@@ -10,7 +10,7 @@
 # How To Use
 
 This library can be used for two scenarios which differ in creation:
-- [Lightweigt Kotlin Redux](#lightweigt-kotlin-redux)
+- [Lightweight Kotlin Redux](#lightweight-kotlin-redux)
 - [Project Setup](#project-setup)
   + [KMP State Definition](#kmp-state-definition)
   + [Native Implementation](#native-implementation)
@@ -20,7 +20,7 @@ This library can be used for two scenarios which differ in creation:
 
 
 
-# Lightweigt Kotlin Redux
+# Lightweight Kotlin Redux
 
 The Lightweight Kotlin Redux Library is an opinionated implementation of the Redux Architecture.
 It is used in many projects of the Smoca AG and has some design choices that fit our needs.
@@ -32,7 +32,8 @@ Following is a description of the components and how they are intended to be use
 - Only use data classes with `val` properties. 
 - The state **MUST** be immutable (which it is, if there are only `val` properties)
 
-The state decribes the data of the whole system. The state must not be mutable. Only data classes with read-properties are allowed. The only component that can change the state is the [Reducer](#reducer)
+The state describes the data of the whole system. The state must not be mutable. Only data 
+classes with read-properties are allowed. The only component that can change the state is the [Reducer](#reducer)
 
 ```kotlin
 data class AppState(
@@ -51,23 +52,24 @@ data class AppState(
 ```kotlin
 //create a store
 val store = Store<AppState>(
-  initialState =  /*initial state if any*/,
+  initialState = State() /*initial state if any*/,
   reducers = listOf(/*List of all reducers*/),
 	middlewares = listOf(/*List of all middlewares*/)
 )
-...
+
 // listen to changes
 store.stateObservable.collect() { state ->
 	Log.d("Change", "State: $state")
 }
+
 //or if you use Jetpack Compose
 val state by store.stateObservable.collectAsState()
+
 //dispatch some action. The action will run on a different thread.
 store.dispatch(Add(amount = 1))
-
 ```
 
-All actions will be run on a single thread of the store. Dispatching an action will therefore never block the calling thread. Changes musst be observerd through the stateObservable.
+All actions will be run on a single thread of the store. Dispatching an action will therefore never block the calling thread. Changes must be observed through the stateObservable.
 
 ## Reducer
 
@@ -77,18 +79,18 @@ All actions will be run on a single thread of the store. Dispatching an action w
 - Will return a new state depending on the action or the old state
 
 ```kotlin
-class CountReducer: Reducer<AppState> {
-  //seald class lets compile check if 'when' expression is exhaustive
+class CountReducer : Reducer<AppState> {
+    //sealed class lets compile check if 'when' expression is exhaustive
     sealed class CountAction : Action {
         data class Add(val amount: Int) : CountAction()
     }
 
     override fun reduce(action: Action, state: AppState): AppState {
-        (action as? CountAction) ?: return state //only process actions that concern us, otherwise return state
-        when (action) {
+        if (action !is CountAction) return state //only process actions that concern us, otherwise return state
+        return when (action) {
             is CountAction.Add -> {
-              	//the copy-function on each data class can be used to create a new state
-                return state.copy(count = state.count + action.amount)
+                //the copy-function on each data class can be used to create a new state
+                state.copy(count = state.count + action.amount)
             }
         }
     }
@@ -134,7 +136,7 @@ class LogMiddleware : Middleware<AppState> {
 }
 ```
 
-In other Redux implementation, a middleware can return a value. This is not supported in this implementation, since `dispatch(action)` runs on a differtent thread and can not return anything. 
+In other Redux implementation, a middleware can return a value. This is not supported in this implementation, since `dispatch(action)` runs on a different thread and can not return anything. 
 
 ## StateObserver
 
@@ -142,7 +144,9 @@ In other Redux implementation, a middleware can return a value. This is not supp
 - Can hold internal state
 - May run async methods
 
-A `StateObserver` observes the state and may do some work if something in the state changes. This helps to truly encabluate the logic from the rest of the code. If more flexibility is needed (maybe trigger something by an action), [Sagas](#saga) may help.
+A `StateObserver` observes the state and may do some work if something in the state changes. 
+This helps to truly encapsulate the logic from the rest of the code. If more flexibility is 
+needed (maybe trigger something by an action), [Sagas](#saga) may help.
 
 To use the  `StateObserver` the  `StateObserverMiddleware` must be provided to the store.
 
@@ -152,7 +156,8 @@ class ExampleStateObserver: StateObserver<TestState>() {
       /*state has changed. */
       if (state.testProperty == 1) {
         /* do something */
-        //the StateObserver has access to the dispach-function and can dispatch new action that should be processed by a reducer  
+        //the StateObserver has access to the dispatch-function and can dispatch new action that 
+          should be processed by a reducer  
         dispatch(WorkResult())
    		}
    }
@@ -169,7 +174,7 @@ The `StateObserver` will be called for any state change, not just the specific c
 * Listens to Actions
 * Has access to old and new state
 * Can dispatch actions
-* Is intended for longrunning or asynchrone operation (calculations, fetch network data...)
+* Is intended for long running or asynchronous operation (calculations, fetch network data...)
 
 Sagas are typically initiated by an action and then proceed through multiple processing steps. When used with `CancellableSagaMiddleware`, the steps can be canceled if necessary. With `QueueingSagaMiddleware`, the subsequent actions are queued until all steps of the preceding action are fully completed.
 Each saga will be called on its own coroutine whit limitedParallelism = 1.
@@ -187,8 +192,8 @@ class BusySaga() : Saga<AppState>() {
             when (it) {
                 Work.DoWork -> {
                     // a lof of heavy lifting
-                  	...
-                  //the saga has access to the dispach-function and can dispatch new action that should be processed by a reducer
+                  	// ...
+                  //the saga has access to the dispatch-function and can dispatch new action that should be processed by a reducer
                   dispatch(WorkResult())
                 }
             }
@@ -200,7 +205,7 @@ class BusySaga() : Saga<AppState>() {
 
 For convenience, the saga gets the state (old state) before the action and the state after the action (new state). To add some data to the state, it must dispatch an action.
 
-If only certain actions can be processd by a Saga, overwrite `acceptAction` and return the sealed class that defines the action.
+If only certain actions can be processed by a Saga, overwrite `acceptAction` and return the sealed class that defines the action.
 
 
 
@@ -567,9 +572,9 @@ class NetworkSaga() : Saga<AppState>() {
 private fun setUpStore(): Store<AppState> {
         val store = Store<AppState>(
             initialState =  null,
-            reducers = listOf(/List of all reducers/),
-            sagas = listOf(/List of all sagas/),
-            middlewares = listOf(/List of all middlewares/)
+            reducers = listOf(/* List of all reducers */),
+            sagas = listOf(/* List of all sagas */),
+            middlewares = listOf(/* List of all middlewares */)
         )
         return store
     }
