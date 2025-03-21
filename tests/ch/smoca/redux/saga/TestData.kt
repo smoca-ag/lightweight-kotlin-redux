@@ -8,7 +8,7 @@ import ch.smoca.redux.sagas.Saga
 import kotlinx.coroutines.delay
 import kotlin.reflect.KClass
 
-open class TestSaga() : Saga<TestState>() {
+open class TestSaga : Saga<TestState>() {
     val processedActions = mutableListOf<Action>()
     val startedActions = mutableListOf<Action>()
     override val acceptAction: KClass<out Action>?

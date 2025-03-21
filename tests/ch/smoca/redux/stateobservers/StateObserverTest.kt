@@ -1,11 +1,9 @@
-package ch.smoca.redux.saga
+package ch.smoca.redux.stateobservers
 
 import ch.smoca.redux.Action
 import ch.smoca.redux.Reducer
 import ch.smoca.redux.State
 import ch.smoca.redux.Store
-import ch.smoca.redux.stateobservers.StateObserver
-import ch.smoca.redux.stateobservers.StateObserverMiddleware
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -46,25 +44,34 @@ class StateObserverTest {
         assertTrue(testObserver.stateDidChange, "State observer should have been called, because state has changed")
     }
 
-    data class TestState(val testProperty: Int = 0) : State
+    data class TestState(
+        val testProperty: Int = 0,
+        val unwatchedProperty: Int = 0,
+    ) : State
 
     data class TestAction(val id: Int = 0) : Action
     class TestReducer : Reducer<TestState> {
         override fun reduce(action: Action, state: TestState): TestState {
             when(action){
                 is TestAction -> {
-                    return state.copy(testProperty = action.id)
+                    return state.copy(
+                        testProperty = action.id,
+                        unwatchedProperty = state.unwatchedProperty + 1
+                    )
                 }
             }
             return state
         }
-
     }
 
     class TestStateObserver: StateObserver<TestState>() {
         var stateDidChange: Boolean = false
         override fun onStateChanged(state: TestState) {
             stateDidChange = true
+        }
+
+        override fun selectSubState(state: TestState): Any {
+            return state.testProperty
         }
     }
 
