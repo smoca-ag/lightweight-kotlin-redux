@@ -4,7 +4,8 @@ package ch.smoca.redux
  * A middleware that intercepts actions before they reach the reducer.
  *
  * Middlewares are used to log actions, perform side effects, modify actions, or even cancel them.
- * They have access to the store and can pass the action further down the chain by invoking the [next] function.
+ * They have access to the store and can pass the action further down the chain by invoking the
+ * `next` function within [Middleware.process].
  *
  * In other Redux implementation, a middleware can return a value.
  * This is not supported in this implementation, since `dispatch(action)` runs on a different thread and can not return anything.
