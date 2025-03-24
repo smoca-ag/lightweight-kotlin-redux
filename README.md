@@ -1,6 +1,6 @@
 <html lang="en">
 <div align="center">
-  <a href="https://central.sonatype.com/artifact/ch.smoca.lib/lightweight-kotlin-redux" ><img src="https://img.shields.io/badge/mavenCentral-6.1.1-A1C83D?style=for-the-badge" alt="Version"></a>
+  <a href="https://central.sonatype.com/artifact/ch.smoca.lib/lightweight-kotlin-redux" ><img src="https://img.shields.io/badge/mavenCentral-6.2.0-A1C83D?style=for-the-badge" alt="Version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-A1C83D?style=for-the-badge" alt="License"></a>
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge" alt="Kotlin">
 
@@ -166,7 +166,11 @@ class ExampleStateObserver: StateObserver<TestState>() {
 
 `onStateChanged` will be called on coroutine with limitedParallelism = 1. The methode may be called again as soon as the coroutine is freed (for example when calling a other suspending function).
 
-The `StateObserver` will be called for any state change, not just the specific changes it accesses. It is the responsibility of the `StateObserver` to ensure that processes are not unintentionally triggered more than once.
+The `StateObserver` will be called for any state change, not just the specific changes it accesses.
+It is the responsibility of the `StateObserver` to ensure that processes are not unintentionally triggered more than once.
+If only a sub state should be listened to, classes can overwrite `selectSubState`.
+Instead of the whole state, the selected sub state will be compared. Then only if a difference 
+between these sub states is detected, `onStateChanged` will be triggered.
 
 ## Saga
 

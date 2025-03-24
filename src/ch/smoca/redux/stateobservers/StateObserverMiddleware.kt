@@ -42,8 +42,13 @@ class StateObserverMiddleware<T : State>(
 
         if (oldState != state) {
             observers.forEach { context ->
-                CoroutineScope(context.dispatcher).launch {
-                    context.observer.onStateChanged(state)
+                val oldSubState = context.observer.selectSubState(oldState)
+                val newSubState = context.observer.selectSubState(state)
+
+                if (oldSubState != newSubState) {
+                    CoroutineScope(context.dispatcher).launch {
+                        context.observer.onStateChanged(state)
+                    }
                 }
             }
         }

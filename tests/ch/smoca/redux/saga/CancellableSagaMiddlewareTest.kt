@@ -53,7 +53,7 @@ class CancellableSagaTest {
     @Test
     fun testTakeLatest() = runTest {
         launch {
-            (1..3).forEachIndexed() { index, _ ->
+            (1..3).forEachIndexed { index, _ ->
                 cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(
                         id = index + 1,
@@ -79,7 +79,7 @@ class CancellableSagaTest {
     @Test
     fun testTakeLeading() = runTest {
         launch {
-            (1..3).forEachIndexed() { index, _ ->
+            (1..3).forEachIndexed { index, _ ->
                 cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(
                         id = index + 1,
@@ -105,7 +105,7 @@ class CancellableSagaTest {
     @Test
     fun testCancel() = runTest {
         launch {
-            (1..3).forEachIndexed() { index, _ ->
+            (1..3).forEachIndexed { index, _ ->
                 cancellableSagaMiddleware.process(
                     TestSaga.CancelledActions.CancellableTestAction(
                         id = index + 1,
