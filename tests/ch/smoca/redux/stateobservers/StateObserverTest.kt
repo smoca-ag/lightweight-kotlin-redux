@@ -19,30 +19,56 @@ class StateObserverTest {
 
     private lateinit var store: Store<TestState>
     private lateinit var observerMiddleware: StateObserverMiddleware<TestState>
-    private var testObserver : TestStateObserver = TestStateObserver()
+    private var testObserver: TestStateObserver = TestStateObserver()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
     fun setUp() {
         val dispatcher = StandardTestDispatcher(TestCoroutineScheduler())
         observerMiddleware = StateObserverMiddleware(listOf(testObserver), dispatcher)
-        store = Store(TestState(), listOf(TestReducer()), listOf(observerMiddleware),  dispatcher)
+        store = Store(TestState(), listOf(TestReducer()), listOf(observerMiddleware), dispatcher)
         Dispatchers.setMain(dispatcher)
     }
 
     @Test
-    fun testNoChangeChange() = runTest{
+    fun testNoChangeChange() = runTest {
         store.dispatch(TestAction(0))
         testScheduler.advanceUntilIdle()
-        assertFalse(testObserver.stateDidChange, "State observer should not have been called, because there is already testProperty = 0 in the state")
+        assertFalse(
+            testObserver.stateDidChange,
+            "State observer should not have been called, because there is already testProperty = 0 in the state"
+        )
     }
 
     @Test
-    fun testCallObserverOnChange() = runTest{
+    fun testCallObserverOnChange() = runTest {
         store.dispatch(TestAction(1))
         testScheduler.advanceUntilIdle()
-        assertTrue(testObserver.stateDidChange, "State observer should have been called, because state has changed")
+        assertTrue(
+            testObserver.stateDidChange,
+            "State observer should have been called, because state has changed"
+        )
     }
+
+    @Test
+    fun testUnwatchedChange() = runTest {
+        //test if observer is called if we change the unwatched property
+        store.dispatch(ChangeUnwatchedState(1))
+        testScheduler.advanceUntilIdle()
+        assertTrue(
+            !testObserver.stateDidChange,
+            "State observer should not have been called, because only an unwatched property has changed"
+        )
+        //change the watched property
+        store.dispatch(TestAction(1))
+        testScheduler.advanceUntilIdle()
+        assertTrue(
+            testObserver.stateDidChange,
+            "State observer should have been called, because state has changed"
+        )
+    }
+
+
 
     data class TestState(
         val testProperty: Int = 0,
@@ -50,13 +76,18 @@ class StateObserverTest {
     ) : State
 
     data class TestAction(val id: Int = 0) : Action
+    data class ChangeUnwatchedState(val data: Int = 0) : Action
     class TestReducer : Reducer<TestState> {
         override fun reduce(action: Action, state: TestState): TestState {
-            when(action){
+            when (action) {
                 is TestAction -> {
                     return state.copy(
-                        testProperty = action.id,
-                        unwatchedProperty = state.unwatchedProperty + 1
+                        testProperty = action.id
+                    )
+                }
+                is ChangeUnwatchedState -> {
+                    return state.copy(
+                        unwatchedProperty = action.data
                     )
                 }
             }
@@ -64,7 +95,7 @@ class StateObserverTest {
         }
     }
 
-    class TestStateObserver: StateObserver<TestState>() {
+    class TestStateObserver : StateObserver<TestState>() {
         var stateDidChange: Boolean = false
         override fun onStateChanged(state: TestState) {
             stateDidChange = true
@@ -74,7 +105,6 @@ class StateObserverTest {
             return state.testProperty
         }
     }
-
 
 
 }
