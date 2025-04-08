@@ -68,5 +68,5 @@ abstract class StateObserver<T : State> {
      * @param state The current state from which to select the sub state.
      * @return The selected sub state. Defaults to [state]
      */
-    open fun selectSubState(state: T): Any = state
+    open fun selectSubState(state: T): Any? = state
 }
